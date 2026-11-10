@@ -11,4 +11,16 @@ Development workspace for **LLM-Based Agentic AI for Tool Selection and Multi-St
 - `thesis/` — thesis drafts and evidence-linked updates
 - `agent-control/` — operating rules for the development agent
 
-The project is currently at the foundation stage. The next milestone is to define the three image-management tool interfaces and construct the controlled evaluation dataset.
+The safe tool layer, 20-case evaluation matrix, and first local dashboard are now available. The next milestone is the executable scenario runner, followed by lightweight LLM integration.
+
+## Run the local dashboard
+
+Create a virtual environment, install the requirements, and start the app:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python run.py
+```
+
+Open `http://127.0.0.1:8000`. Use **Load demo gallery** to try the safe tools without using personal images.

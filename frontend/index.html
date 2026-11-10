@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="FYP Agent local image-management dashboard" />
+    <title>FYP Agent — Local Image Lab</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#top" aria-label="FYP Agent home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img"><path d="M7 8.5 16 3l9 5.5v15L16 29l-9-5.5v-15Z"/><path d="m11 11 5-3 5 3v7.5l-5 3-5-3V11Z"/></svg>
+          </span>
+          <span><strong>FYP</strong> Agent</span>
+        </a>
+
+        <nav class="nav-list" aria-label="Dashboard sections">
+          <a class="nav-item active" href="#overview">
+            <span class="nav-icon">⌂</span><span>Overview</span>
+          </a>
+          <a class="nav-item" href="#command-lab">
+            <span class="nav-icon">⌁</span><span>Command lab</span>
+          </a>
+          <a class="nav-item" href="#toolkit">
+            <span class="nav-icon">◇</span><span>Safe tools</span>
+          </a>
+          <a class="nav-item" href="#safety">
+            <span class="nav-icon">✓</span><span>Safety</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="eyebrow">Research build</span>
+          <strong>Milestone 1</strong>
+          <div class="progress-track"><span style="width: 42%"></span></div>
+          <small>Core tools ready</small>
+        </div>
+
+        <div class="sidebar-foot">
+          <span class="pulse-dot"></span>
+          <span>Local runner</span>
+          <strong id="runner-status">Checking…</strong>
+        </div>
+      </aside>
+
+      <main class="main" id="top">
+        <header class="topbar">
+          <div>
+            <span class="mobile-brand">FYP Agent</span>
+            <p class="breadcrumb">Workspace <span>/</span> Local image lab</p>
+          </div>
+          <div class="top-actions">
+            <span class="status-pill"><span class="pulse-dot"></span> Guardrails on</span>
+            <button class="icon-button" id="refresh-health" title="Refresh runner status" aria-label="Refresh runner status">↻</button>
+          </div>
+        </header>
+
+        <section class="hero" id="overview">
+          <div class="hero-copy">
+            <span class="eyebrow">Controlled agent workspace</span>
+            <h1>Local image tasks,<br /><em>clearly under control.</em></h1>
+            <p>Test each tool, inspect every argument, and keep your original images safe. No hidden steps.</p>
+            <div class="hero-actions">
+              <a class="button primary" href="#command-lab">Open command lab <span>→</span></a>
+              <button class="button ghost" id="load-demo-top">Load demo gallery</button>
+            </div>
+          </div>
+          <div class="hero-visual" aria-label="Agent workflow preview">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="core-node">
+              <span class="core-glow"></span>
+              <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 18h32v28H16z"/><circle cx="25" cy="29" r="3"/><circle cx="39" cy="29" r="3"/><path d="M24 38h16M32 18V9M27 9h10"/></svg>
+              <small>Agent</small>
+            </div>
+            <div class="float-chip chip-one"><span>01</span> Find</div>
+            <div class="float-chip chip-two"><span>02</span> Create</div>
+            <div class="float-chip chip-three"><span>03</span> Copy</div>
+          </div>
+        </section>
+
+        <section class="metric-grid" aria-label="Project metrics">
+          <article class="metric-card accent-a"><span class="metric-label">Allowed tools</span><strong>03</strong><small>Strict allowlist</small></article>
+          <article class="metric-card accent-b"><span class="metric-label">Test cases</span><strong>23</strong><small>All passing</small></article>
+          <article class="metric-card accent-c"><span class="metric-label">Eval scenarios</span><strong>20</strong><small>Ready to run</small></article>
+          <article class="metric-card accent-d"><span class="metric-label">Delete actions</span><strong>00</strong><small>Not permitted</small></article>
+        </section>
+
+        <section class="section-block" id="command-lab">
+          <div class="section-heading">
+            <div><span class="eyebrow">Try the foundation</span><h2>Command lab</h2></div>
+            <button class="button compact ghost" id="load-demo">Use demo data</button>
+          </div>
+
+          <div class="lab-grid">
+            <form class="control-panel" id="tool-form">
+              <div class="field-group">
+                <label for="gallery-path">Gallery directory</label>
+                <div class="input-with-badge">
+                  <input id="gallery-path" name="gallery" placeholder="C:\Users\You\Pictures\Gallery" autocomplete="off" required />
+                  <span>LOCAL</span>
+                </div>
+                <small>Every path must stay inside this folder.</small>
+              </div>
+
+              <fieldset class="field-group">
+                <legend>Choose a safe tool</legend>
+                <div class="tool-tabs" role="radiogroup">
+                  <label class="tool-tab active"><input type="radio" name="tool" value="retrieve_images_by_date" checked /><span>Find</span></label>
+                  <label class="tool-tab"><input type="radio" name="tool" value="create_folder" /><span>Create</span></label>
+                  <label class="tool-tab"><input type="radio" name="tool" value="copy_images" /><span>Copy</span></label>
+                </div>
+              </fieldset>
+
+              <div class="tool-fields" data-tool-fields="retrieve_images_by_date">
+                <div class="field-row">
+                  <div class="field-group"><label for="target-date">Image date</label><input id="target-date" type="date" value="2026-11-10" /></div>
+                  <label class="switch-field"><input id="recursive" type="checkbox" checked /><span class="switch"></span><span><strong>Search folders</strong><small>Include nested folders</small></span></label>
+                </div>
+              </div>
+
+              <div class="tool-fields hidden" data-tool-fields="create_folder">
+                <div class="field-group"><label for="folder-name">New folder</label><input id="folder-name" placeholder="albums/November" value="albums/November" /></div>
+              </div>
+
+              <div class="tool-fields hidden" data-tool-fields="copy_images">
+                <div class="field-group"><label for="image-paths">Image paths</label><textarea id="image-paths" rows="3" placeholder="inbox/photo-1.jpg&#10;inbox/photo-2.png">inbox/campus-morning.jpg
+inbox/lab-session.png</textarea><small>One gallery-relative path per line.</small></div>
+                <div class="field-group"><label for="destination-folder">Destination folder</label><input id="destination-folder" placeholder="albums/November" value="albums/November" /></div>
+              </div>
+
+              <button class="button primary run-button" type="submit"><span class="button-icon">▶</span><span>Run safe tool</span></button>
+            </form>
+
+            <article class="trace-panel" aria-live="polite">
+              <div class="trace-header">
+                <div><span class="eyebrow">Live output</span><h3>Execution trace</h3></div>
+                <span class="trace-state idle" id="trace-state">Waiting</span>
+              </div>
+              <div class="trace-empty" id="trace-empty">
+                <div class="empty-icon">⌁</div>
+                <strong>Ready when you are</strong>
+                <p>Choose a tool and run it. The full result will appear here.</p>
+              </div>
+              <div class="trace-content hidden" id="trace-content">
+                <ol class="timeline" id="timeline"></ol>
+                <div class="result-summary" id="result-summary"></div>
+                <pre id="result-json"></pre>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" id="toolkit">
+          <div class="section-heading"><div><span class="eyebrow">Small by design</span><h2>Three tools. Clear jobs.</h2></div><p>No open-ended file access. The agent can only use these actions.</p></div>
+          <div class="tool-card-grid">
+            <article class="tool-card"><span class="tool-number">01</span><div class="tool-symbol find-symbol">⌕</div><h3>Find images</h3><p>Matches supported files using a clear ISO date.</p><span class="code-label">retrieve_images_by_date</span></article>
+            <article class="tool-card"><span class="tool-number">02</span><div class="tool-symbol folder-symbol">＋</div><h3>Create folder</h3><p>Builds a destination without leaving the gallery.</p><span class="code-label">create_folder</span></article>
+            <article class="tool-card"><span class="tool-number">03</span><div class="tool-symbol copy-symbol">⧉</div><h3>Copy images</h3><p>Keeps originals and renames duplicate files safely.</p><span class="code-label">copy_images</span></article>
+          </div>
+        </section>
+
+        <section class="safety-banner" id="safety">
+          <div class="safety-mark">✓</div>
+          <div><span class="eyebrow">Safety perimeter</span><h2>Your originals stay untouched.</h2><p>Paths outside the chosen gallery are blocked. Deletion is not an available tool. Existing files are never overwritten.</p></div>
+          <div class="safety-list"><span>Gallery bound</span><span>No deletion</span><span>No overwrite</span></div>
+        </section>
+
+        <footer><span>FYP Agent · Research prototype</span><span>Local first. Evidence ready.</span></footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>
