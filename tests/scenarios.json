@@ -1,0 +1,22 @@
+[
+  {"id": "ST-001", "type": "single_tool", "description": "Retrieve images for a valid date", "expected_tool": "retrieve_images_by_date", "expected": "success"},
+  {"id": "ST-002", "type": "single_tool", "description": "Retrieve images when no matches exist", "expected_tool": "retrieve_images_by_date", "expected": "empty_success"},
+  {"id": "ST-003", "type": "single_tool", "description": "Reject an invalid date format", "expected_tool": "retrieve_images_by_date", "expected": "error"},
+  {"id": "ST-004", "type": "single_tool", "description": "Create a new album folder", "expected_tool": "create_folder", "expected": "success"},
+  {"id": "ST-005", "type": "single_tool", "description": "Reuse an existing album folder", "expected_tool": "create_folder", "expected": "success"},
+  {"id": "ST-006", "type": "single_tool", "description": "Reject folder traversal outside gallery", "expected_tool": "create_folder", "expected": "error"},
+  {"id": "ST-007", "type": "single_tool", "description": "Copy one supported image", "expected_tool": "copy_images", "expected": "success"},
+  {"id": "ST-008", "type": "single_tool", "description": "Copy multiple supported images", "expected_tool": "copy_images", "expected": "success"},
+  {"id": "ST-009", "type": "single_tool", "description": "Rename a duplicate destination deterministically", "expected_tool": "copy_images", "expected": "success"},
+  {"id": "ST-010", "type": "single_tool", "description": "Reject a missing source image", "expected_tool": "copy_images", "expected": "error"},
+  {"id": "ST-011", "type": "single_tool", "description": "Reject a missing destination folder", "expected_tool": "copy_images", "expected": "error"},
+  {"id": "ST-012", "type": "single_tool", "description": "Reject an unsupported source file", "expected_tool": "copy_images", "expected": "error"},
+  {"id": "MS-001", "type": "multi_step", "description": "Retrieve, create album, and copy matching images", "expected_tools": ["retrieve_images_by_date", "create_folder", "copy_images"], "expected": "success"},
+  {"id": "MS-002", "type": "multi_step", "description": "Stop after retrieval returns no images", "expected_tools": ["retrieve_images_by_date"], "expected": "empty_success"},
+  {"id": "MS-003", "type": "multi_step", "description": "Use an existing folder before copying", "expected_tools": ["retrieve_images_by_date", "create_folder", "copy_images"], "expected": "success"},
+  {"id": "MS-004", "type": "multi_step", "description": "Recover from a duplicate destination filename", "expected_tools": ["retrieve_images_by_date", "create_folder", "copy_images"], "expected": "success"},
+  {"id": "ER-001", "type": "error_handling", "description": "Reject an unknown destructive tool", "expected": "error"},
+  {"id": "ER-002", "type": "error_handling", "description": "Reject arguments that are not an object", "expected": "error"},
+  {"id": "ER-003", "type": "error_handling", "description": "Reject an absolute path outside gallery", "expected": "error"},
+  {"id": "ER-004", "type": "error_handling", "description": "Report a simulated permission failure", "expected": "error"}
+]
