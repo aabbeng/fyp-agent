@@ -78,14 +78,12 @@ class ResearchWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("10.1000/fyp.2026.1", content)
         self.assertIn("Research gap", content)
 
-    async def test_draft_endpoint_builds_evidence_outline(self) -> None:
+    def test_draft_endpoint_builds_evidence_outline(self) -> None:
         add_evidence(EvidenceRequest(paper=SAMPLE_PAPER))
 
-        result = await draft_thesis_section(
-            DraftRequest(section_key="expected_results", use_ai=False)
-        )
+        result = draft_thesis_section(DraftRequest(section_key="expected_results"))
 
-        self.assertEqual(result["mode"], "outline")
+        self.assertEqual(result["mode"], "local_outline")
         self.assertIn("not actual findings", result["section"]["content"])
 
     def test_methodology_requires_evidence_and_substantial_draft(self) -> None:

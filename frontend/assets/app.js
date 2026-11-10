@@ -141,9 +141,7 @@ function renderWorkspace() {
   const runButton = els.form.querySelector('button[type="submit"]');
   runButton.disabled = !approved;
   runButton.title = approved ? "" : "Approve the methodology first";
-  els.aiStatus.textContent = state.agent_team.configured
-    ? `AI writer connected · ${state.agent_team.model}`
-    : "Outline mode ready · add OPENAI_API_KEY for AI writing";
+  els.aiStatus.textContent = "Free local automation · no API key or extra payment needed";
   const section = state.sections.find((item) => item.section_key === activeSection);
   if (section) {
     els.sectionTitle.textContent = section.title;
@@ -217,23 +215,22 @@ document.querySelector("#save-section").addEventListener("click", async () => {
   try { await saveSection(); } catch (error) { showToast(error.message); }
 });
 
-async function draftSection(useAI) {
-  const button = document.querySelector(useAI ? "#ask-writer" : "#build-outline");
-  button.disabled = true; button.textContent = useAI ? "Writer working…" : "Building…";
+async function draftSection() {
+  const button = document.querySelector("#build-outline");
+  button.disabled = true; button.textContent = "Building…";
   try {
     await saveSection(false);
     const result = await api("/api/thesis/draft", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section_key: activeSection, use_ai: useAI }),
+      body: JSON.stringify({ section_key: activeSection }),
     });
     await loadWorkspace();
-    showToast(useAI ? "AI draft created from verified evidence." : "Evidence outline created.");
+    showToast("Evidence outline created locally.");
   } catch (error) { showToast(error.message); }
-  finally { button.disabled = false; button.textContent = useAI ? "Ask AI writer" : "Build evidence outline"; }
+  finally { button.disabled = false; button.textContent = "Build evidence outline"; }
 }
 
-document.querySelector("#build-outline").addEventListener("click", () => draftSection(false));
-document.querySelector("#ask-writer").addEventListener("click", () => draftSection(true));
+document.querySelector("#build-outline").addEventListener("click", draftSection);
 
 document.querySelector("#approve-method").addEventListener("click", async () => {
   try {

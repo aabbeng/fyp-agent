@@ -12,12 +12,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from application.agent_team import (
-    AgentNotConfiguredError,
-    UnsupportedCitationError,
-    draft_with_team,
-    status as agent_status,
-)
 from application.controller import ALLOWED_TOOLS, execute_tool
 from application.database import (
     get_section,
@@ -65,12 +59,19 @@ class SectionRequest(BaseModel):
 class DraftRequest(BaseModel):
     section_key: str
     focus: str = ""
-    use_ai: bool = False
 
 
 class ApprovalRequest(BaseModel):
     confirmed: bool
     notes: str = ""
+
+
+def local_team_status() -> dict[str, Any]:
+    return {
+        "mode": "free-local",
+        "paid_api": False,
+        "agents": ["Coordinator", "Research Assistant", "Thesis Organizer", "Development Gate"],
+    }
 
 
 def _create_demo_image(path: Path, hour: int) -> None:
@@ -92,7 +93,7 @@ def health() -> dict[str, Any]:
         "service": "FYP Agent local runner",
         "allowed_tools": len(ALLOWED_TOOLS),
         "safety": "gallery-bound",
-        "agents": agent_status(),
+        "agents": local_team_status(),
         "methodology": methodology_status()["status"],
     }
 
@@ -108,7 +109,7 @@ def workspace() -> dict[str, Any]:
         "sections": sections,
         "methodology": gate,
         "build_unlocked": gate["status"] == "approved",
-        "agent_team": agent_status(),
+        "agent_team": local_team_status(),
         "activities": list_activities(12),
     }
 
@@ -160,25 +161,13 @@ def update_thesis_section(section_key: str, request: SectionRequest) -> dict[str
 
 
 @app.post("/api/thesis/draft")
-async def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
+def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
     section = get_section(request.section_key)
     if not section:
         raise HTTPException(status_code=404, detail="Unknown thesis section")
     papers = list_papers()
-    if request.use_ai:
-        try:
-            content = await draft_with_team(
-                request.section_key,
-                section["content"],
-                request.focus,
-                papers,
-            )
-        except (AgentNotConfiguredError, UnsupportedCitationError) as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
-        mode = "ai"
-    else:
-        content = build_evidence_outline(request.section_key, papers)
-        mode = "outline"
+    content = build_evidence_outline(request.section_key, papers)
+    mode = "local_outline"
     saved = save_section(request.section_key, content)
     log_activity("Thesis Writer", "Prepared draft", f"{saved['title']} — {mode}")
     return {"success": True, "mode": mode, "section": saved}
