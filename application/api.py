@@ -40,7 +40,7 @@ from application.database import (
     set_methodology_status,
 )
 from application.agents import refresh_team_states
-from application.notifications import send_telegram, telegram_configured
+from application.notifications import send_agent_update, telegram_configured
 from application.research import ResearchSearchError, search_papers
 from application.thesis import build_evidence_outline
 from application.bibliography import import_approved_citations
@@ -100,6 +100,13 @@ def local_team_status() -> dict[str, Any]:
         "paid_api": False,
         "agents": [agent["name"] for agent in list_agent_states()],
     }
+
+
+def _notify_agent(agent: str, update_type: str, message: str, next_step: str = "") -> bool:
+    try:
+        return send_agent_update(agent, update_type, message, next_step)
+    except Exception:
+        return False
 
 
 @app.middleware("http")
@@ -260,16 +267,16 @@ def import_citations(request: CitationImportRequest) -> dict[str, Any]:
         f"{result['imported']} saved · {result['duplicates']} duplicates removed",
     )
     refresh_team_states()
-    try:
-        send_telegram(
-            "XENG evidence update\n\n"
-            f"• Evi-Revy imported {result['imported']} approved Introduction sources\n"
-            f"• Removed {result['duplicates']} duplicate(s)\n"
-            "• Planx can now use them for thesis structure\n"
-            "• Full-text checks remain required for detailed claims"
-        )
-    except Exception:
-        pass
+    _notify_agent(
+        "Evi-Revy", "Import completed",
+        f"I imported {result['imported']} approved Introduction sources and removed {result['duplicates']} duplicate(s).",
+        "Please review any correction notes when convenient. Full-text checks are still required for detailed claims.",
+    )
+    _notify_agent(
+        "Planx", "Evidence ready",
+        f"The approved Introduction sources are now available in my evidence pool.",
+        "Open Thesis Studio, search for the papers you want, and add them to my next draft.",
+    )
     return {"success": True, **result}
 
 
@@ -307,6 +314,11 @@ def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
     mode = "local_outline"
     saved = save_section(request.section_key, content)
     log_activity("Planx", "Prepared draft", f"{saved['title']} — {len(papers)} selected sources")
+    _notify_agent(
+        "Planx", "Draft ready",
+        f"I prepared the {saved['title']} draft using {len(papers)} source(s) selected by you.",
+        "Please review the academic wording and in-text citations before saving or approving it.",
+    )
     return {"success": True, "mode": mode, "section": saved, "source_count": len(papers)}
 
 
@@ -323,6 +335,11 @@ def approve_methodology(request: ApprovalRequest) -> dict[str, Any]:
     gate = set_methodology_status("approved", request.notes)
     log_activity("Cordy", "Methodology approved", "Xengineer development gate unlocked")
     refresh_team_states()
+    _notify_agent(
+        "Xengineer", "Methodology approved",
+        "The methodology gate is open and I can begin converting it into prototype tasks.",
+        "No action is required unless you want to revise the methodology.",
+    )
     return {"success": True, "methodology": gate, "build_unlocked": True}
 
 
@@ -334,6 +351,11 @@ def reopen_methodology() -> dict[str, Any]:
     gate = set_methodology_status("locked", "Reopened for editing")
     log_activity("Cordy", "Methodology reopened", "Xengineer development gate locked")
     refresh_team_states()
+    _notify_agent(
+        "Cordy", "Approval changed",
+        "The methodology was reopened, so I paused Xengineer and locked development again.",
+        "Finish your revisions and approve the methodology when it is ready.",
+    )
     return {"success": True, "methodology": gate, "build_unlocked": False}
 
 
@@ -376,7 +398,13 @@ def run_tool(request: ToolRequest) -> dict[str, Any]:
         request.gallery,
         {"tool": request.tool, "arguments": request.arguments},
     )
-    return result.to_dict()
+    payload = result.to_dict()
+    _notify_agent(
+        "TeeHee", "Prototype check" if result.success else "Issue found",
+        f"The {request.tool} operation {'completed successfully' if result.success else 'was stopped safely'}.",
+        "Review the execution result in Build Lab." if not result.success else "No action is required unless you want to run another test.",
+    )
+    return payload
 
 
 @app.post("/api/demo/setup")

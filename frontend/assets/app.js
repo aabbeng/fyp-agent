@@ -29,7 +29,6 @@ const els = {
   candidateList: document.querySelector("#candidate-list"),
   runList: document.querySelector("#run-list"),
   officeGrid: document.querySelector("#office-grid"),
-  agentChatFeed: document.querySelector("#agent-chat-feed"),
   citationFile: document.querySelector("#citation-file"),
   citationApproved: document.querySelector("#citation-approved"),
   importCitations: document.querySelector("#import-citations"),
@@ -298,7 +297,7 @@ function renderWorkspace() {
   document.querySelector("#operation-database").textContent = state.operation.database === "postgresql" ? "Supabase connected" : "Local SQLite";
   document.querySelector("#operation-telegram").textContent = state.operation.telegram ? "Connected" : "Not connected";
   document.querySelector("#operation-schedule").textContent = state.operation.schedule;
-  renderAgentOffice(state.agents || [], state.agent_messages || []);
+  renderAgentOffice(state.agents || []);
 }
 
 const agentColours = {
@@ -306,7 +305,7 @@ const agentColours = {
   "xengineer": "orange", "teehee": "purple", "cordy": "yellow",
 };
 
-function renderAgentOffice(agents, messages) {
+function renderAgentOffice(agents) {
   if (!els.officeGrid) return;
   els.officeGrid.innerHTML = agents.map((agent, index) => `
     <article class="pixel-desk status-${escapeHTML(agent.status)}" style="--delay:${index * -.37}s">
@@ -324,12 +323,6 @@ function renderAgentOffice(agents, messages) {
       <p>${escapeHTML(agent.current_task)}</p>
     </article>`).join("");
 
-  const names = Object.fromEntries(agents.map((agent) => [agent.agent_key, agent.name]));
-  els.agentChatFeed.innerHTML = messages.length ? messages.slice(0, 10).map((message) => `
-    <div class="chat-line"><span class="chat-avatar">${escapeHTML((names[message.sender_key] || "X").slice(0, 1))}</span>
-      <div><strong>${escapeHTML(names[message.sender_key] || message.sender_key)} <em>→ ${escapeHTML(names[message.receiver_key] || message.receiver_key)}</em></strong>
-      <p>${escapeHTML(message.message)}</p></div><time>${escapeHTML(new Date(message.created_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}))}</time></div>`).join("")
-    : '<div class="soft-empty">No handoffs yet. The next cloud cycle will start the conversation.</div>';
 }
 
 function updateOfficeClock() {

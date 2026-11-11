@@ -12,7 +12,7 @@ from application.database import (
     save_candidate,
     start_job,
 )
-from application.notifications import send_telegram
+from application.notifications import send_team_update
 from application.research import search_papers
 from application.agents import refresh_team_states
 
@@ -61,13 +61,8 @@ def run_research_cycle() -> dict[str, object]:
             f"{new_count} new papers · {pending} waiting for review",
         )
         team_updates = refresh_team_states(seen_count, new_count)
-        message = (
-            "XENG office update\n\n"
-            + "\n".join(f"• {update}" for update in team_updates)
-            + f"\n\nStatus: {result['status']}"
-        )
         try:
-            result["telegram_sent"] = send_telegram(message)
+            result["telegram_sent"] = send_team_update(team_updates)
         except Exception as exc:
             result["telegram_sent"] = False
             errors.append(f"Telegram: {exc}")

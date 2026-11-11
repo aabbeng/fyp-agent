@@ -21,7 +21,7 @@ def _review_summary() -> tuple[int, int]:
     return len(candidates), reviewable
 
 
-def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> list[str]:
+def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> list[dict[str, str]]:
     """Move each specialist to the correct stage without bypassing human approval."""
     pending, reviewable = _review_summary()
     approved = len(list_papers())
@@ -32,7 +32,11 @@ def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> lis
         "scoot", "done", "Search scholarly indexes",
         f"Checked {papers_checked} papers and found {new_candidates} new candidates.",
     )
-    updates.append(f"Scoot: checked {papers_checked}, found {new_candidates} new")
+    updates.append({
+        "agent": "Scoot", "type": "Research update",
+        "message": f"I checked {papers_checked} papers and found {new_candidates} new candidates.",
+        "next_step": "No action is needed unless you want to review the new candidates now.",
+    })
     send_agent_message("scoot", "evi-revy", f"Please review {pending} paper candidates.")
 
     evi_status = "review" if pending else "waiting"
@@ -40,7 +44,11 @@ def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> lis
         "evi-revy", evi_status, "Check candidate metadata and relevance",
         f"{reviewable} of {pending} candidates have enough metadata for your review.",
     )
-    updates.append(f"Evi-Revy: {pending} papers waiting for human approval")
+    updates.append({
+        "agent": "Evi-Revy", "type": "Review reminder",
+        "message": f"{pending} paper candidates are waiting for your approval. I have enough metadata to review {reviewable} of them.",
+        "next_step": "Open Operation Centre and approve only the papers you trust.",
+    })
     send_agent_message("evi-revy", "planx", f"{approved} approved papers are ready for thesis planning.")
 
     if approved:
@@ -53,7 +61,11 @@ def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> lis
             "planx", "blocked", "Wait for approved evidence",
             "I need at least one approved paper before planning the thesis.",
         )
-    updates.append(f"Planx: {approved} approved evidence papers available")
+    updates.append({
+        "agent": "Planx", "type": "Thesis status",
+        "message": f"I have {approved} approved evidence papers available for thesis planning.",
+        "next_step": "Choose the papers you want me to use in Thesis Studio, then ask me to write.",
+    })
 
     if method_approved:
         update_agent_state(
@@ -74,7 +86,16 @@ def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> lis
             "teehee", "blocked", "Wait for a prototype build",
             "Testing starts after Xengineer produces an approved build.",
         )
-    updates.append("Xengineer and TeeHee: " + ("build stage unlocked" if method_approved else "waiting at approval gate"))
+    updates.append({
+        "agent": "Xengineer", "type": "Development status",
+        "message": "The build stage is unlocked." if method_approved else "Development is paused at the methodology approval gate.",
+        "next_step": "I can begin converting the approved methodology into build tasks." if method_approved else "Review and approve the methodology when you are satisfied with it.",
+    })
+    updates.append({
+        "agent": "TeeHee", "type": "Testing status",
+        "message": "I am preparing the test plan for the unlocked build." if method_approved else "I am waiting for an approved prototype build before testing can begin.",
+        "next_step": "No action is needed right now.",
+    })
 
     update_agent_state(
         "cordy", "working", "Coordinate agents and report progress",
@@ -82,5 +103,9 @@ def refresh_team_states(papers_checked: int = 0, new_candidates: int = 0) -> lis
         f"{'open' if method_approved else 'locked'}.",
     )
     send_agent_message("cordy", "scoot", "Next research cycle remains scheduled every 6 hours.")
-    updates.append("Cordy: team synced and Telegram report prepared")
+    updates.append({
+        "agent": "Cordy", "type": "Team status",
+        "message": "I synced the team and prepared this briefing for you.",
+        "next_step": "I will coordinate the next research cycle automatically.",
+    })
     return updates

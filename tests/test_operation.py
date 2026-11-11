@@ -9,6 +9,7 @@ from unittest.mock import patch
 from application import database
 from application.auth import create_session, password_valid, session_valid
 from application.automation import research_topics, run_research_cycle
+from application.notifications import format_agent_update, format_team_update
 
 
 PAPER = {
@@ -53,7 +54,7 @@ class OperationTests(unittest.TestCase):
     def test_empty_topic_variable_uses_defaults(self) -> None:
         self.assertGreater(len(research_topics()), 0)
 
-    @patch("application.automation.send_telegram", return_value=True)
+    @patch("application.automation.send_team_update", return_value=True)
     @patch("application.automation.search_papers", return_value=[PAPER])
     def test_cycle_records_run_and_notifies(self, _search, _telegram) -> None:
         result = run_research_cycle()
@@ -70,6 +71,25 @@ class AuthTests(unittest.TestCase):
         self.assertFalse(password_valid("wrong"))
         self.assertTrue(session_valid(create_session()))
         self.assertFalse(session_valid("bad.session"))
+
+
+class NotificationTests(unittest.TestCase):
+    def test_agent_update_addresses_beng_as_owner(self) -> None:
+        message = format_agent_update(
+            "Planx", "Draft ready", "I finished the literature review.", "Please review it.",
+        )
+        self.assertIn("PLANX — DRAFT READY", message)
+        self.assertIn("Boss Beng", message)
+        self.assertIn("What I need from you", message)
+
+    def test_team_update_keeps_each_agent_clearly_separated(self) -> None:
+        message = format_team_update([
+            {"agent": "Scoot", "type": "Status", "message": "Research is complete."},
+            {"agent": "Cordy", "type": "Reminder", "message": "The team is synced."},
+        ])
+        self.assertIn("Owner: BENG", message)
+        self.assertIn("SCOOT — STATUS", message)
+        self.assertIn("CORDY — REMINDER", message)
 
 
 if __name__ == "__main__":
