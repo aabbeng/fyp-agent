@@ -28,6 +28,8 @@ from application.database import (
     get_section,
     get_sections,
     list_activities,
+    list_agent_messages,
+    list_agent_states,
     list_candidates,
     list_job_runs,
     list_papers,
@@ -37,6 +39,7 @@ from application.database import (
     save_section,
     set_methodology_status,
 )
+from application.agents import refresh_team_states
 from application.notifications import telegram_configured
 from application.research import ResearchSearchError, search_papers
 from application.thesis import build_evidence_outline
@@ -88,7 +91,7 @@ def local_team_status() -> dict[str, Any]:
     return {
         "mode": "cloud-ready" if os.getenv("DATABASE_URL") else "free-local",
         "paid_api": False,
-        "agents": ["Coordinator", "Research Assistant", "Thesis Organizer", "Development Gate"],
+        "agents": [agent["name"] for agent in list_agent_states()],
     }
 
 
@@ -175,6 +178,8 @@ def workspace() -> dict[str, Any]:
         "build_unlocked": gate["status"] == "approved",
         "agent_team": local_team_status(),
         "activities": list_activities(12),
+        "agents": list_agent_states(),
+        "agent_messages": list_agent_messages(18),
         "research_candidates": list_candidates("pending", 50),
         "job_runs": list_job_runs(12),
         "operation": {
@@ -197,7 +202,8 @@ def approve_research_candidate(doi: str) -> dict[str, Any]:
         paper = approve_candidate(doi)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    log_activity("Research Agent", "Candidate approved", paper["title"])
+    log_activity("Evi-Revy", "Candidate approved", paper["title"])
+    refresh_team_states()
     return {"success": True, "paper": paper}
 
 
@@ -210,7 +216,7 @@ def research_search(
         papers = search_papers(query, rows)
     except ResearchSearchError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    log_activity("Research Agent", "Searched papers", f"{query} — {len(papers)} results")
+    log_activity("Scoot", "Searched papers", f"{query} — {len(papers)} results")
     return {"query": query, "count": len(papers), "papers": papers}
 
 
@@ -220,7 +226,8 @@ def add_evidence(request: EvidenceRequest) -> dict[str, Any]:
         paper = save_paper(request.paper, request.relevance, request.notes)
     except (KeyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=f"Invalid paper: {exc}") from exc
-    log_activity("Research Agent", "Saved evidence", f"{paper['title']} — {paper['doi']}")
+    log_activity("Evi-Revy", "Saved evidence", f"{paper['title']} — {paper['doi']}")
+    refresh_team_states()
     return {"success": True, "paper": paper}
 
 
@@ -243,7 +250,7 @@ def update_thesis_section(section_key: str, request: SectionRequest) -> dict[str
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     if section_key == "methodology" and methodology_status()["status"] == "approved":
         set_methodology_status("locked", "Methodology changed after approval")
-    log_activity("Thesis Writer", "Saved draft", section["title"])
+    log_activity("Planx", "Saved draft", section["title"])
     return {"success": True, "section": section}
 
 
@@ -256,7 +263,7 @@ def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
     content = build_evidence_outline(request.section_key, papers)
     mode = "local_outline"
     saved = save_section(request.section_key, content)
-    log_activity("Thesis Writer", "Prepared draft", f"{saved['title']} — {mode}")
+    log_activity("Planx", "Prepared draft", f"{saved['title']} — {mode}")
     return {"success": True, "mode": mode, "section": saved}
 
 
@@ -271,7 +278,8 @@ def approve_methodology(request: ApprovalRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="Save at least one verified paper first")
     save_section("methodology", section["content"], status="approved")
     gate = set_methodology_status("approved", request.notes)
-    log_activity("Coordinator", "Methodology approved", "Development gate unlocked")
+    log_activity("Cordy", "Methodology approved", "Xengineer development gate unlocked")
+    refresh_team_states()
     return {"success": True, "methodology": gate, "build_unlocked": True}
 
 
@@ -281,7 +289,8 @@ def reopen_methodology() -> dict[str, Any]:
     if section:
         save_section("methodology", section["content"], status="draft")
     gate = set_methodology_status("locked", "Reopened for editing")
-    log_activity("Coordinator", "Methodology reopened", "Development gate locked")
+    log_activity("Cordy", "Methodology reopened", "Xengineer development gate locked")
+    refresh_team_states()
     return {"success": True, "methodology": gate, "build_unlocked": False}
 
 

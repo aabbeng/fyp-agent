@@ -42,6 +42,13 @@ class OperationTests(unittest.TestCase):
         database.approve_candidate(PAPER["doi"])
         self.assertEqual(len(database.list_papers()), 1)
 
+    def test_six_named_agents_are_initialized(self) -> None:
+        agents = database.list_agent_states()
+        self.assertEqual(
+            [agent["name"] for agent in agents],
+            ["Scoot", "Evi-Revy", "Planx", "Xengineer", "TeeHee", "Cordy"],
+        )
+
     @patch.dict(os.environ, {"XENG_RESEARCH_TOPICS": ""})
     def test_empty_topic_variable_uses_defaults(self) -> None:
         self.assertGreater(len(research_topics()), 0)
@@ -53,6 +60,7 @@ class OperationTests(unittest.TestCase):
         self.assertEqual(result["new_candidates"], 1)
         self.assertTrue(result["telegram_sent"])
         self.assertEqual(database.list_job_runs()[0]["status"], "completed")
+        self.assertGreater(len(database.list_agent_messages()), 0)
 
 
 class AuthTests(unittest.TestCase):

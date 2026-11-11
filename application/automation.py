@@ -14,6 +14,7 @@ from application.database import (
 )
 from application.notifications import send_telegram
 from application.research import search_papers
+from application.agents import refresh_team_states
 
 DEFAULT_TOPICS = (
     "LLM agent tool selection multi-step execution;"
@@ -55,16 +56,15 @@ def run_research_cycle() -> dict[str, object]:
         }
         finish_job(job_id, result["status"], json.dumps(result))
         log_activity(
-            "Research Agent",
+            "Scoot",
             "Autonomous cycle finished",
             f"{new_count} new papers · {pending} waiting for review",
         )
+        team_updates = refresh_team_states(seen_count, new_count)
         message = (
-            "XENG research update\n"
-            f"New papers: {new_count}\n"
-            f"Waiting for review: {pending}\n"
-            f"Topics checked: {len(research_topics())}\n"
-            f"Status: {result['status']}"
+            "XENG office update\n\n"
+            + "\n".join(f"• {update}" for update in team_updates)
+            + f"\n\nStatus: {result['status']}"
         )
         try:
             result["telegram_sent"] = send_telegram(message)

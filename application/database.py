@@ -20,6 +20,15 @@ SECTION_TITLES = {
     "expected_results": "Expected Results",
 }
 
+AGENT_SEEDS = (
+    ("scoot", "Scoot", "Research Scout", "Finds recent and relevant academic papers."),
+    ("evi-revy", "Evi-Revy", "Evidence Reviewer", "Checks paper relevance, quality, and research value."),
+    ("planx", "Planx", "Thesis Planner", "Maps approved evidence into the thesis structure."),
+    ("xengineer", "Xengineer", "Prototype Engineer", "Turns the approved methodology into build tasks."),
+    ("teehee", "TeeHee", "Test & Evaluation Agent", "Tests the prototype and records its results."),
+    ("cordy", "Cordy", "Project Coordinator", "Controls handoffs, approvals, and team updates."),
+)
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -110,12 +119,24 @@ def initialize_database() -> None:
                 details TEXT NOT NULL DEFAULT '', started_at TEXT NOT NULL,
                 finished_at TEXT
             );
+            CREATE TABLE IF NOT EXISTS agent_states (
+                agent_key TEXT PRIMARY KEY, name TEXT NOT NULL, role TEXT NOT NULL,
+                responsibility TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'waiting',
+                current_task TEXT NOT NULL DEFAULT '', last_message TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS agent_messages (
+                id {id_column}, sender_key TEXT NOT NULL, receiver_key TEXT NOT NULL,
+                message TEXT NOT NULL, created_at TEXT NOT NULL
+            );
             CREATE INDEX IF NOT EXISTS idx_candidates_status_seen
                 ON research_candidates (status, last_seen_at);
             CREATE INDEX IF NOT EXISTS idx_job_runs_name_started
                 ON job_runs (job_name, started_at);
             CREATE INDEX IF NOT EXISTS idx_activities_created
                 ON activities (created_at);
+            CREATE INDEX IF NOT EXISTS idx_agent_messages_created
+                ON agent_messages (created_at);
             """
         )
         for section_key, title in SECTION_TITLES.items():
@@ -133,6 +154,63 @@ def initialize_database() -> None:
             VALUES (1, 'locked', '') ON CONFLICT(id) DO NOTHING
             """
         )
+        for agent_key, name, role, responsibility in AGENT_SEEDS:
+            connection.execute(
+                """
+                INSERT INTO agent_states
+                    (agent_key, name, role, responsibility, status, current_task,
+                     last_message, updated_at)
+                VALUES (?, ?, ?, ?, 'waiting', 'Waiting for the next handoff',
+                        'Ready in the XENG office', ?)
+                ON CONFLICT(agent_key) DO UPDATE SET
+                    name = excluded.name, role = excluded.role,
+                    responsibility = excluded.responsibility
+                """,
+                (agent_key, name, role, responsibility, _now()),
+            )
+
+
+def update_agent_state(
+    agent_key: str, status: str, current_task: str, last_message: str
+) -> dict[str, Any]:
+    if status not in {"working", "waiting", "review", "blocked", "done"}:
+        raise ValueError("Invalid agent status")
+    with connect() as connection:
+        connection.execute(
+            "UPDATE agent_states SET status = ?, current_task = ?, last_message = ?, "
+            "updated_at = ? WHERE agent_key = ?",
+            (status, current_task.strip(), last_message.strip(), _now(), agent_key),
+        )
+        row = connection.execute(
+            "SELECT * FROM agent_states WHERE agent_key = ?", (agent_key,)
+        ).fetchone()
+    if not row:
+        raise ValueError("Unknown agent")
+    return dict(row)
+
+
+def list_agent_states() -> list[dict[str, Any]]:
+    order = {seed[0]: index for index, seed in enumerate(AGENT_SEEDS)}
+    with connect() as connection:
+        rows = connection.execute("SELECT * FROM agent_states").fetchall()
+    return sorted((dict(row) for row in rows), key=lambda row: order.get(row["agent_key"], 99))
+
+
+def send_agent_message(sender_key: str, receiver_key: str, message: str) -> None:
+    with connect() as connection:
+        connection.execute(
+            "INSERT INTO agent_messages (sender_key, receiver_key, message, created_at) "
+            "VALUES (?, ?, ?, ?)",
+            (sender_key, receiver_key, message.strip(), _now()),
+        )
+
+
+def list_agent_messages(limit: int = 30) -> list[dict[str, Any]]:
+    with connect() as connection:
+        rows = connection.execute(
+            "SELECT * FROM agent_messages ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+    return [dict(row) for row in rows]
 
 
 def log_activity(agent: str, action: str, details: str) -> None:

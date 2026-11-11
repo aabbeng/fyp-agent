@@ -35,6 +35,9 @@
           <a class="nav-item" href="#research-lab">
             <span class="nav-icon">⌕</span><span>Research</span>
           </a>
+          <a class="nav-item" href="#agent-office">
+            <span class="nav-icon">▦</span><span>Agent office</span>
+          </a>
           <a class="nav-item" href="#thesis-studio">
             <span class="nav-icon">▤</span><span>Thesis studio</span>
           </a>
@@ -95,11 +98,27 @@
             <div class="core-node">
               <span class="core-glow"></span>
               <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 18h32v28H16z"/><circle cx="25" cy="29" r="3"/><circle cx="39" cy="29" r="3"/><path d="M24 38h16M32 18V9M27 9h10"/></svg>
-              <small>Coordinator</small>
+              <small>Cordy</small>
             </div>
             <div class="float-chip chip-one"><span>01</span> Research</div>
             <div class="float-chip chip-two"><span>02</span> Write</div>
             <div class="float-chip chip-three"><span>03</span> Build</div>
+          </div>
+        </section>
+
+        <section class="section-block office-section" id="agent-office">
+          <div class="section-heading">
+            <div><span class="eyebrow">Live team view</span><h2>The XENG pixel office</h2></div>
+            <p>See who is working, waiting, reviewing, or blocked by an approval gate.</p>
+          </div>
+          <div class="pixel-office" id="pixel-office" aria-label="Six-agent pixel office">
+            <div class="office-wall"><span>XENG LAB · CLOUD FLOOR 01</span><div class="office-clock" id="office-clock">--:--</div></div>
+            <div class="office-grid" id="office-grid"></div>
+            <div class="office-floor-lines"></div>
+          </div>
+          <div class="office-feed workspace-card">
+            <div class="card-title"><div><span class="eyebrow">Agent communication</span><h3>Chatty chat</h3></div><span class="live-chip"><i></i> LIVE</span></div>
+            <div class="agent-chat-feed" id="agent-chat-feed"><div class="soft-empty">The agents are checking their desks…</div></div>
           </div>
         </section>
 
@@ -163,14 +182,16 @@
               </div>
             </div>
             <aside class="workspace-card agent-panel">
-              <span class="eyebrow">Team status</span><h3>Free local workflow</h3>
+              <span class="eyebrow">Team status</span><h3>XENG specialist team</h3>
               <ol class="agent-roster">
-                <li><span>01</span><div><strong>Coordinator</strong><small>Controls the workflow</small></div></li>
-                <li><span>02</span><div><strong>Research Assistant</strong><small>Organizes verified papers</small></div></li>
-                <li><span>03</span><div><strong>Thesis Organizer</strong><small>Builds evidence outlines</small></div></li>
-                <li><span>04</span><div><strong>Development Gate</strong><small>Waits for method approval</small></div></li>
+                <li><span>01</span><div><strong>Scoot</strong><small>Research Scout · finds papers</small></div></li>
+                <li><span>02</span><div><strong>Evi-Revy</strong><small>Evidence Reviewer · checks sources</small></div></li>
+                <li><span>03</span><div><strong>Planx</strong><small>Thesis Planner · structures evidence</small></div></li>
+                <li><span>04</span><div><strong>Xengineer</strong><small>Prototype Engineer · builds the method</small></div></li>
+                <li><span>05</span><div><strong>TeeHee</strong><small>Test & Evaluation · checks results</small></div></li>
+                <li><span>06</span><div><strong>Cordy</strong><small>Project Coordinator · controls handoffs</small></div></li>
               </ol>
-              <div class="connection-state" id="ai-status">Local automation active</div>
+              <div class="connection-state" id="ai-status">Cloud team syncing</div>
             </aside>
           </div>
         </section>
