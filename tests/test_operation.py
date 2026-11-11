@@ -71,6 +71,13 @@ class OperationTests(unittest.TestCase):
     def test_empty_topic_variable_uses_defaults(self) -> None:
         self.assertGreater(len(research_topics()), 0)
 
+    @patch.dict(os.environ, {"XENG_RESEARCH_TOPICS": "custom image research"})
+    def test_custom_topics_extend_instead_of_replace_project_scope(self) -> None:
+        topics = research_topics()
+        self.assertIn("custom image research", topics)
+        self.assertTrue(any("digital asset management" in topic for topic in topics))
+        self.assertTrue(any("privacy" in topic for topic in topics))
+
     @patch("application.automation.send_team_update", return_value=True)
     @patch("application.automation.search_papers", return_value=[PAPER])
     def test_cycle_records_run_and_notifies(self, _search, _telegram) -> None:

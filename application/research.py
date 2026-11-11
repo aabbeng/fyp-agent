@@ -106,7 +106,7 @@ def search_papers(query: str, rows: int = 8) -> list[dict[str, Any]]:
         raise ResearchSearchError("CROSSREF_MAILTO is required to verify open-access papers")
     params: dict[str, Any] = {
         "query.bibliographic": query,
-        "rows": min(rows * 3, 60),
+        "rows": min(rows * 2, 40),
         "filter": f"from-pub-date:{MIN_PUBLICATION_YEAR}-01-01,until-pub-date:{MAX_PUBLICATION_YEAR}-12-31",
         "select": "DOI,title,author,published,published-print,published-online,issued,container-title,URL,abstract,type,is-referenced-by-count,score",
     }

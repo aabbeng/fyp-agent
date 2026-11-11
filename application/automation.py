@@ -13,19 +13,28 @@ from application.database import (
     start_job,
 )
 from application.notifications import send_paper_review, send_team_update
-from application.research import search_papers
+from application.research import meets_thesis_source_rules, search_papers
 from application.agents import refresh_team_states
 
-DEFAULT_TOPICS = (
-    "LLM agent tool selection multi-step execution;"
-    "agentic AI local image management;"
-    "LLM agents planning tool use evaluation"
+CORE_RESEARCH_TOPICS = (
+    "artificial intelligence tool selection and multi-step task execution",
+    "autonomous software agents planning and action execution",
+    "function calling tool use and API orchestration",
+    "intelligent image retrieval organization and digital asset management",
+    "computer vision assisted personal photo management",
+    "local-first AI privacy security and safe file automation",
+    "human in the loop approval for autonomous AI systems",
+    "evaluation benchmarks reliability and failure recovery for AI agents",
 )
 
 
 def research_topics() -> list[str]:
-    raw = os.getenv("XENG_RESEARCH_TOPICS", "").strip() or DEFAULT_TOPICS
-    return [topic.strip() for topic in raw.split(";") if topic.strip()]
+    custom = [
+        topic.strip() for topic in os.getenv("XENG_RESEARCH_TOPICS", "").split(";")
+        if topic.strip()
+    ]
+    # Custom interests extend the project profile; they never remove its core themes.
+    return list(dict.fromkeys((*custom, *CORE_RESEARCH_TOPICS)))
 
 
 def run_research_cycle() -> dict[str, object]:
@@ -35,7 +44,7 @@ def run_research_cycle() -> dict[str, object]:
     seen_count = 0
     errors: list[str] = []
     try:
-        rows = max(1, min(int(os.getenv("XENG_RESULTS_PER_TOPIC", "8")), 20))
+        rows = max(1, min(int(os.getenv("XENG_RESULTS_PER_TOPIC", "5")), 20))
         for topic in research_topics():
             try:
                 for paper in search_papers(topic, rows):
@@ -47,7 +56,10 @@ def run_research_cycle() -> dict[str, object]:
             except Exception as exc:  # one topic must not stop the full cycle
                 errors.append(f"{topic}: {exc}")
 
-        pending = len(list_candidates("pending", 1000))
+        pending = sum(
+            1 for candidate in list_candidates("pending", 1000)
+            if meets_thesis_source_rules(candidate["paper"])
+        )
         result = {
             "job_id": job_id,
             "status": "completed" if seen_count or not errors else "failed",
