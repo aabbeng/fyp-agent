@@ -29,8 +29,9 @@ a { color: inherit; text-decoration: none; }
 .app-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 28px 22px 24px; background: var(--nav); color: #e8f3ed; display: flex; flex-direction: column; z-index: 20; }
 .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; letter-spacing: -0.02em; }
-.brand-mark { width: 38px; height: 38px; display: grid; place-items: center; color: var(--mint); }
+.brand-mark { width: 46px; height: 46px; display: grid; place-items: center; color: var(--mint); }
 .brand-mark svg { width: 38px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.brand-mark img { width: 46px; height: 46px; object-fit: contain; filter: drop-shadow(0 0 9px rgba(103,217,255,.28)); }
 .brand-mark svg path:last-child { stroke: var(--aqua); }
 .nav-list { display: grid; gap: 8px; margin-top: 54px; }
 .nav-item { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 12px; color: #a9b9b2; font-size: 14px; font-weight: 600; transition: .2s ease; }
@@ -133,6 +134,7 @@ footer { display: flex; justify-content: space-between; padding: 24px clamp(24px
 .login-screen { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 20%, rgba(103,217,255,.13), transparent 35%), rgba(4,7,12,.94); backdrop-filter: blur(30px); }
 .login-card { width: min(420px, 100%); display: grid; gap: 16px; padding: 38px; border: 1px solid rgba(255,255,255,.14); border-radius: 28px; background: linear-gradient(145deg, rgba(25,34,50,.78), rgba(9,13,21,.8)); box-shadow: 0 40px 120px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1); }
 .login-card h1 { margin: 0; font-size: 42px; letter-spacing: -.05em; }.login-card p { margin: -8px 0 4px; color: var(--ink-soft); }.login-card small { min-height: 18px; color: #ff9cab; }.login-mark { display: grid; place-items: center; color: #07110f; font-weight: 900; background: linear-gradient(135deg, var(--mint), var(--aqua)); }
+.login-mark { width:74px; height:74px; background:transparent; }.login-mark img { width:74px; height:74px; }
 .operation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }.operation-card { display: grid; gap: 12px; min-height: 150px; }.operation-card strong { align-self: end; font-size: 20px; }.operation-card small { color: var(--ink-soft); }.operation-lists { margin-top: 18px; }.run-list { display: grid; gap: 9px; }.run-item { padding: 13px; border: 1px solid var(--line); border-radius: 13px; background: rgba(4,7,12,.3); }.run-item strong, .run-item small { display: block; }.run-item small { margin-top: 5px; color: var(--ink-soft); }
 @media (max-width: 900px) { .operation-grid { grid-template-columns: 1fr; } }
 @media (max-width: 430px) { .metric-grid { grid-template-columns: 1fr; }.hero-actions .button { width:100%; }.tool-tabs { grid-template-columns:1fr; }.safety-banner { padding:24px; }.safety-mark { display:none; }.safety-banner { grid-template-columns:1fr; }.safety-list { grid-template-columns:1fr; } }
