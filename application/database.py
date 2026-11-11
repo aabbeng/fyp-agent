@@ -327,6 +327,32 @@ def approve_candidate(doi: str) -> dict[str, Any]:
     return paper
 
 
+def decide_candidate(candidate_id: int, decision: str) -> dict[str, Any]:
+    if decision not in {"approved", "rejected"}:
+        raise ValueError("Invalid paper decision")
+    with connect() as connection:
+        row = connection.execute(
+            "SELECT * FROM research_candidates WHERE id = ?", (candidate_id,)
+        ).fetchone()
+    if not row:
+        raise ValueError("Research candidate not found")
+    candidate = dict(row)
+    candidate["paper"] = json.loads(candidate.pop("paper_json"))
+    if candidate["status"] != "pending":
+        candidate["already_decided"] = True
+        return candidate
+    if decision == "approved":
+        save_paper(candidate["paper"])
+    with connect() as connection:
+        connection.execute(
+            "UPDATE research_candidates SET status = ?, last_seen_at = ? WHERE id = ?",
+            (decision, _now(), candidate_id),
+        )
+    candidate["status"] = decision
+    candidate["already_decided"] = False
+    return candidate
+
+
 def start_job(job_name: str) -> int:
     with connect() as connection:
         cursor = connection.execute(

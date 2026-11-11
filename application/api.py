@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import hmac
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ from application.auth import (
 )
 from application.database import (
     approve_candidate,
+    decide_candidate,
     backend_name,
     get_section,
     get_sections,
@@ -40,7 +42,15 @@ from application.database import (
     set_methodology_status,
 )
 from application.agents import refresh_team_states
-from application.notifications import send_agent_update, telegram_configured
+from application.notifications import (
+    answer_callback,
+    configure_webhook,
+    remove_message_buttons,
+    send_agent_action,
+    send_agent_update,
+    send_paper_review,
+    telegram_configured,
+)
 from application.research import ResearchSearchError, search_papers
 from application.thesis import build_evidence_outline
 from application.bibliography import import_approved_citations
@@ -111,7 +121,7 @@ def _notify_agent(agent: str, update_type: str, message: str, next_step: str = "
 
 @app.middleware("http")
 async def protect_api(request: Request, call_next):
-    public_paths = {"/api/health", "/api/auth/status", "/api/auth/login"}
+    public_paths = {"/api/health", "/api/auth/status", "/api/auth/login", "/api/telegram/webhook"}
     if (
         auth_required()
         and request.url.path.startswith("/api/")
@@ -208,6 +218,97 @@ def workspace() -> dict[str, Any]:
 def research_candidates() -> dict[str, Any]:
     candidates = list_candidates("pending", 100)
     return {"count": len(candidates), "candidates": candidates}
+
+
+def _approve_methodology_action(notes: str = "Approved by Boss Beng through Telegram") -> dict[str, Any]:
+    section = get_section("methodology")
+    if not section or len(section["content"].strip()) < 120:
+        raise ValueError("Methodology draft is too short to approve")
+    if not list_papers():
+        raise ValueError("Save at least one verified paper first")
+    save_section("methodology", section["content"], status="approved")
+    gate = set_methodology_status("approved", notes)
+    log_activity("Cordy", "Methodology approved", "Xengineer development gate unlocked")
+    refresh_team_states()
+    return {"methodology": gate, "build_unlocked": True}
+
+
+@app.post("/api/telegram/setup")
+def setup_telegram(request: Request) -> dict[str, Any]:
+    configured_url = os.getenv("XENG_PUBLIC_URL", "").strip()
+    public_url = configured_url or str(request.base_url).rstrip("/")
+    try:
+        configure_webhook(public_url)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    log_activity("Cordy", "Telegram control connected", public_url)
+    return {"success": True, "webhook": f"{public_url}/api/telegram/webhook"}
+
+
+@app.post("/api/telegram/sync-papers")
+def sync_papers_to_telegram(limit: int = Query(default=5, ge=1, le=10)) -> dict[str, Any]:
+    sent = 0
+    for candidate in list_candidates("pending", limit):
+        sent += int(send_paper_review(candidate))
+    return {"success": True, "sent": sent}
+
+
+@app.post("/api/telegram/webhook")
+async def telegram_webhook(request: Request) -> dict[str, bool]:
+    expected_secret = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
+    received_secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+    if not expected_secret or not hmac.compare_digest(received_secret, expected_secret):
+        raise HTTPException(status_code=403, detail="Invalid Telegram webhook secret")
+
+    update = await request.json()
+    callback = update.get("callback_query")
+    if not callback:
+        return {"ok": True}
+    message = callback.get("message") or {}
+    chat_id = str((message.get("chat") or {}).get("id", ""))
+    owner_chat = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+    if not owner_chat or not hmac.compare_digest(chat_id, owner_chat):
+        answer_callback(callback.get("id", ""), "This control belongs to Boss Beng.")
+        raise HTTPException(status_code=403, detail="Telegram owner mismatch")
+
+    data = callback.get("data", "")
+    notice = "Decision recorded."
+    try:
+        parts = data.split(":")
+        if len(parts) == 3 and parts[0] == "paper" and parts[1] in {"approve", "reject"}:
+            decision = "approved" if parts[1] == "approve" else "rejected"
+            candidate = decide_candidate(int(parts[2]), decision)
+            title = candidate["paper"]["title"]
+            notice = f"Paper {decision}."
+            log_activity("Evi-Revy", f"Candidate {decision}", title)
+            refresh_team_states()
+            if decision == "approved" and not candidate["already_decided"]:
+                _notify_agent(
+                    "Planx", "Evidence approved",
+                    f'Boss Beng approved "{title}". I added it to the evidence library.',
+                    "I will use it only when Boss Beng selects it for a thesis draft.",
+                )
+        elif data == "method:approve":
+            _approve_methodology_action()
+            notice = "Methodology approved. Xengineer is unlocked."
+        elif data.startswith("draft:reviewed:"):
+            section_key = data.removeprefix("draft:reviewed:")
+            section = get_section(section_key)
+            if not section:
+                raise ValueError("Draft section was not found")
+            save_section(section_key, section["content"], status="reviewed")
+            log_activity("Planx", "Draft reviewed", section["title"])
+            notice = f"{section['title']} marked as reviewed."
+        elif data.startswith("test:ack:"):
+            log_activity("TeeHee", "Test result acknowledged", data.removeprefix("test:ack:"))
+            notice = "Test result acknowledged."
+        else:
+            raise ValueError("Unknown or expired Telegram action")
+        remove_message_buttons(chat_id, int(message["message_id"]))
+        answer_callback(callback["id"], notice)
+    except (ValueError, KeyError) as exc:
+        answer_callback(callback.get("id", ""), str(exc))
+    return {"ok": True}
 
 
 @app.post("/api/research/candidates/{doi:path}/approve")
@@ -314,33 +415,43 @@ def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
     mode = "local_outline"
     saved = save_section(request.section_key, content)
     log_activity("Planx", "Prepared draft", f"{saved['title']} — {len(papers)} selected sources")
-    _notify_agent(
-        "Planx", "Draft ready",
-        f"I prepared the {saved['title']} draft using {len(papers)} source(s) selected by you.",
-        "Please review the academic wording and in-text citations before saving or approving it.",
-    )
+    public_url = os.getenv("XENG_PUBLIC_URL", "").strip().rstrip("/")
+    if public_url:
+        try:
+            buttons = [[{"text": "✅ Mark reviewed", "callback_data": f"draft:reviewed:{request.section_key}"}]]
+            if request.section_key == "methodology":
+                buttons[0].append({"text": "🔓 Approve method", "callback_data": "method:approve"})
+            buttons.append([{"text": "Open Thesis Studio", "url": f"{public_url}/#thesis-studio"}])
+            send_agent_action(
+                "Planx", "Review requested",
+                f"The {saved['title']} is ready for your decision.",
+                "Review it in XENG, then use the action below.", buttons,
+            )
+        except Exception:
+            pass
+    else:
+        _notify_agent(
+            "Planx", "Draft ready",
+            f"I prepared the {saved['title']} draft using {len(papers)} source(s) selected by you.",
+            "Please review the academic wording and in-text citations before saving or approving it.",
+        )
     return {"success": True, "mode": mode, "section": saved, "source_count": len(papers)}
 
 
 @app.post("/api/methodology/approve")
 def approve_methodology(request: ApprovalRequest) -> dict[str, Any]:
-    section = get_section("methodology")
     if not request.confirmed:
         raise HTTPException(status_code=400, detail="Approval confirmation is required")
-    if not section or len(section["content"].strip()) < 120:
-        raise HTTPException(status_code=400, detail="Methodology draft is too short to approve")
-    if not list_papers():
-        raise HTTPException(status_code=400, detail="Save at least one verified paper first")
-    save_section("methodology", section["content"], status="approved")
-    gate = set_methodology_status("approved", request.notes)
-    log_activity("Cordy", "Methodology approved", "Xengineer development gate unlocked")
-    refresh_team_states()
+    try:
+        result = _approve_methodology_action(request.notes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     _notify_agent(
         "Xengineer", "Methodology approved",
         "The methodology gate is open and I can begin converting it into prototype tasks.",
         "No action is required unless you want to revise the methodology.",
     )
-    return {"success": True, "methodology": gate, "build_unlocked": True}
+    return {"success": True, **result}
 
 
 @app.post("/api/methodology/reopen")
@@ -399,11 +510,26 @@ def run_tool(request: ToolRequest) -> dict[str, Any]:
         {"tool": request.tool, "arguments": request.arguments},
     )
     payload = result.to_dict()
-    _notify_agent(
-        "TeeHee", "Prototype check" if result.success else "Issue found",
-        f"The {request.tool} operation {'completed successfully' if result.success else 'was stopped safely'}.",
-        "Review the execution result in Build Lab." if not result.success else "No action is required unless you want to run another test.",
-    )
+    public_url = os.getenv("XENG_PUBLIC_URL", "").strip().rstrip("/")
+    if public_url:
+        try:
+            send_agent_action(
+                "TeeHee", "Prototype check" if result.success else "Issue found",
+                f"The {request.tool} operation {'completed successfully' if result.success else 'was stopped safely'}.",
+                "Review the result, then acknowledge it below.",
+                [
+                    [{"text": "✅ Acknowledge", "callback_data": f"test:ack:{request.tool}"}],
+                    [{"text": "Open Build Lab", "url": f"{public_url}/#command-lab"}],
+                ],
+            )
+        except Exception:
+            pass
+    else:
+        _notify_agent(
+            "TeeHee", "Prototype check" if result.success else "Issue found",
+            f"The {request.tool} operation {'completed successfully' if result.success else 'was stopped safely'}.",
+            "Review the execution result in Build Lab." if not result.success else "No action is required unless you want to run another test.",
+        )
     return payload
 
 

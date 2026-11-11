@@ -45,6 +45,8 @@ const els = {
   planxSearchResults: document.querySelector("#planx-search-results"),
   operationEvidenceCount: document.querySelector("#operation-evidence-count"),
   operationEvidenceList: document.querySelector("#operation-evidence-list"),
+  telegramConnect: document.querySelector("#telegram-connect"),
+  telegramSync: document.querySelector("#telegram-sync"),
 };
 
 let workspaceState = null;
@@ -340,6 +342,30 @@ els.candidateList.addEventListener("click", async (event) => {
     await api(`/api/research/candidates/${encodeURIComponent(button.dataset.doi)}/approve`, { method: "POST" });
     await loadWorkspace(); showToast("Paper approved and added to evidence.");
   } catch (error) { button.disabled = false; showToast(error.message); }
+});
+
+els.telegramConnect?.addEventListener("click", async () => {
+  els.telegramConnect.disabled = true;
+  try {
+    await api("/api/telegram/setup", { method: "POST" });
+    showToast("Two-way Telegram control is connected.");
+    els.telegramConnect.textContent = "Replies enabled";
+  } catch (error) {
+    showToast(error.message);
+    els.telegramConnect.disabled = false;
+  }
+});
+
+els.telegramSync?.addEventListener("click", async () => {
+  els.telegramSync.disabled = true;
+  try {
+    const result = await api("/api/telegram/sync-papers?limit=5", { method: "POST" });
+    showToast(`${result.sent} paper review(s) sent to Telegram.`);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    els.telegramSync.disabled = false;
+  }
 });
 
 async function loadWorkspace() {

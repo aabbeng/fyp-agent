@@ -18,3 +18,11 @@ services:
         value: "true"
       - key: CROSSREF_MAILTO
         sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: XENG_PUBLIC_URL
+        value: "https://xeng.onrender.com"

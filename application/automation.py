@@ -12,7 +12,7 @@ from application.database import (
     save_candidate,
     start_job,
 )
-from application.notifications import send_team_update
+from application.notifications import send_paper_review, send_team_update
 from application.research import search_papers
 from application.agents import refresh_team_states
 
@@ -31,6 +31,7 @@ def research_topics() -> list[str]:
 def run_research_cycle() -> dict[str, object]:
     job_id = start_job("research-cycle")
     new_count = 0
+    new_candidates: list[dict[str, object]] = []
     seen_count = 0
     errors: list[str] = []
     try:
@@ -38,8 +39,10 @@ def run_research_cycle() -> dict[str, object]:
         for topic in research_topics():
             try:
                 for paper in search_papers(topic, rows):
-                    _, created = save_candidate(paper, topic)
+                    candidate, created = save_candidate(paper, topic)
                     new_count += int(created)
+                    if created:
+                        new_candidates.append(candidate)
                     seen_count += 1
             except Exception as exc:  # one topic must not stop the full cycle
                 errors.append(f"{topic}: {exc}")
@@ -62,6 +65,10 @@ def run_research_cycle() -> dict[str, object]:
         )
         team_updates = refresh_team_states(seen_count, new_count)
         try:
+            sent_reviews = 0
+            for candidate in new_candidates:
+                sent_reviews += int(send_paper_review(candidate))
+            result["paper_reviews_sent"] = sent_reviews
             result["telegram_sent"] = send_team_update(team_updates)
         except Exception as exc:
             result["telegram_sent"] = False
