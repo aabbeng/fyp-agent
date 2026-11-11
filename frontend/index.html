@@ -197,17 +197,19 @@
                 <button class="button ghost" id="build-outline">Build evidence outline</button>
               </div>
             </div>
-            <aside class="workspace-card agent-panel">
-              <span class="eyebrow">Team status</span><h3>XENG specialist team</h3>
-              <ol class="agent-roster">
-                <li><span>01</span><div><strong>Scoot</strong><small>Research Scout · finds papers</small></div></li>
-                <li><span>02</span><div><strong>Evi-Revy</strong><small>Evidence Reviewer · checks sources</small></div></li>
-                <li><span>03</span><div><strong>Planx</strong><small>Thesis Planner · structures evidence</small></div></li>
-                <li><span>04</span><div><strong>Xengineer</strong><small>Prototype Engineer · builds the method</small></div></li>
-                <li><span>05</span><div><strong>TeeHee</strong><small>Test & Evaluation · checks results</small></div></li>
-                <li><span>06</span><div><strong>Cordy</strong><small>Project Coordinator · controls handoffs</small></div></li>
-              </ol>
-              <div class="connection-state" id="ai-status">Cloud team syncing</div>
+            <aside class="workspace-card planx-office state-idle" id="planx-office">
+              <div class="planx-office-head"><div><span class="eyebrow">Planx · private office</span><h3>Thesis planner at work</h3></div><span class="planx-live"><i></i><b id="planx-status">Coffee break</b></span></div>
+              <div class="planx-room">
+                <div class="planx-window"><i></i><i></i><span></span></div>
+                <div class="planx-shelf"><i></i><i></i><i></i><i></i></div>
+                <div class="planx-bubble" id="planx-bubble">Send me approved evidence when you're ready.</div>
+                <button class="planx-character" id="planx-character" type="button" aria-label="Talk to Planx">
+                  <i class="px-hair-back"></i><i class="px-head"></i><i class="px-hair"></i><i class="px-glasses left"></i><i class="px-glasses right"></i><i class="px-body"></i><i class="px-arm left"></i><i class="px-arm right"></i>
+                </button>
+                <div class="planx-desk"><i class="px-monitor"></i><i class="px-screen-line one"></i><i class="px-screen-line two"></i><i class="px-keyboard"></i><i class="px-paper"></i><i class="px-cup"></i><i class="px-steam one"></i><i class="px-steam two"></i></div>
+                <div class="planx-rug"></div>
+              </div>
+              <div class="connection-state" id="ai-status">Idle · click Planx to say hello</div>
             </aside>
           </div>
         </section>

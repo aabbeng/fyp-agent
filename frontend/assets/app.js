@@ -34,11 +34,38 @@ const els = {
   citationApproved: document.querySelector("#citation-approved"),
   importCitations: document.querySelector("#import-citations"),
   importResult: document.querySelector("#import-result"),
+  planxOffice: document.querySelector("#planx-office"),
+  planxStatus: document.querySelector("#planx-status"),
+  planxBubble: document.querySelector("#planx-bubble"),
+  planxCharacter: document.querySelector("#planx-character"),
 };
 
 let workspaceState = null;
 let searchResults = [];
 let activeSection = "literature_review";
+let planxMode = "idle";
+let planxTimer = null;
+
+const planxMessages = {
+  idle: ["Coffee ready. Send me approved evidence when you are.", "I’m reviewing the structure in my head.", "Click Build evidence outline when you want me to start."],
+  writing: ["I’m grouping sources by themes—not summarising them one by one."],
+  filing: ["Saving this draft into the thesis workspace."],
+  done: ["Draft ready. Your review is the next checkpoint."],
+  error: ["I hit a problem. Check the message and we’ll try again."],
+};
+
+function setPlanxState(mode, message, returnToIdle = false) {
+  if (!els.planxOffice) return;
+  planxMode = mode;
+  window.clearTimeout(planxTimer);
+  els.planxOffice.classList.remove("state-idle", "state-writing", "state-filing", "state-done", "state-error");
+  els.planxOffice.classList.add(`state-${mode}`);
+  const labels = { idle: "Coffee break", writing: "Writing", filing: "Filing draft", done: "Ready for review", error: "Needs attention" };
+  els.planxStatus.textContent = labels[mode];
+  els.planxBubble.textContent = message || planxMessages[mode][0];
+  els.aiStatus.textContent = `${labels[mode]} · click Planx to talk`;
+  if (returnToIdle) planxTimer = window.setTimeout(() => setPlanxState("idle"), 5200);
+}
 
 function escapeHTML(value = "") {
   return String(value).replace(/[&<>'"]/g, (character) => ({
@@ -189,7 +216,7 @@ function renderWorkspace() {
   const runButton = els.form.querySelector('button[type="submit"]');
   runButton.disabled = !approved;
   runButton.title = approved ? "" : "Approve the methodology first";
-  els.aiStatus.textContent = "Six-agent cloud workflow active";
+  if (planxMode === "idle") els.aiStatus.textContent = "Coffee break · click Planx to talk";
   const section = state.sections.find((item) => item.section_key === activeSection);
   if (section) {
     els.sectionTitle.textContent = section.title;
@@ -308,6 +335,8 @@ document.querySelector("#section-tabs").addEventListener("click", (event) => {
   activeSection = button.dataset.section;
   document.querySelectorAll("#section-tabs button").forEach((item) => item.classList.toggle("active", item === button));
   renderWorkspace();
+  const labels = { literature_review: "literature review", methodology: "methodology", expected_results: "expected results" };
+  setPlanxState("idle", `Opened ${labels[activeSection]}. I’m ready when you are.`);
 });
 
 async function saveSection(showMessage = true) {
@@ -320,12 +349,19 @@ async function saveSection(showMessage = true) {
 }
 
 document.querySelector("#save-section").addEventListener("click", async () => {
-  try { await saveSection(); } catch (error) { showToast(error.message); }
+  setPlanxState("filing");
+  try {
+    await saveSection();
+    setPlanxState("done", "Draft saved safely. I’ll keep it ready for your next instruction.", true);
+  } catch (error) {
+    setPlanxState("error", error.message, true); showToast(error.message);
+  }
 });
 
 async function draftSection() {
   const button = document.querySelector("#build-outline");
   button.disabled = true; button.textContent = "Building…";
+  setPlanxState("writing");
   try {
     await saveSection(false);
     const result = await api("/api/thesis/draft", {
@@ -333,12 +369,22 @@ async function draftSection() {
       body: JSON.stringify({ section_key: activeSection }),
     });
     await loadWorkspace();
+    setPlanxState("done", "Evidence outline ready. Please review my structure before saving it.", true);
     showToast("Evidence outline created locally.");
-  } catch (error) { showToast(error.message); }
+  } catch (error) { setPlanxState("error", error.message, true); showToast(error.message); }
   finally { button.disabled = false; button.textContent = "Build evidence outline"; }
 }
 
 document.querySelector("#build-outline").addEventListener("click", draftSection);
+
+if (els.planxCharacter) {
+  let planxHello = 0;
+  els.planxCharacter.addEventListener("click", () => {
+    if (["writing", "filing"].includes(planxMode)) return;
+    const messages = planxMessages.idle;
+    setPlanxState("done", messages[planxHello++ % messages.length], true);
+  });
+}
 
 document.querySelector("#approve-method").addEventListener("click", async () => {
   try {
