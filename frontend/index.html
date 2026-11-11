@@ -68,7 +68,7 @@
           <div class="hero-copy">
             <span class="eyebrow">Your FYP agent team</span>
             <h1>From real papers<br /><em>to a tested prototype.</em></h1>
-            <p>The research assistant finds papers. The thesis organizer builds evidence-linked chapter structures. Development starts only after you approve the methodology.</p>
+            <p>Research. Structure. Validate. Build.</p>
             <div class="hero-actions">
               <a class="button primary" href="#research-lab">Start research <span>→</span></a>
               <a class="button ghost" href="#thesis-studio">Open thesis studio</a>
@@ -98,7 +98,6 @@
         <section class="section-block" id="research-lab">
           <div class="section-heading">
             <div><span class="eyebrow">Agent 01 · live scholarly search</span><h2>Research library</h2></div>
-            <p>Search Crossref in real time, review the metadata, then save only papers you want the thesis organizer to use.</p>
           </div>
           <div class="research-grid">
             <div class="workspace-card">
@@ -106,7 +105,7 @@
                 <input id="research-query" value="LLM agent tool selection multi-step execution" aria-label="Paper search query" />
                 <button class="button primary" type="submit">Search papers</button>
               </form>
-              <div class="agent-note"><span class="agent-avatar">R</span><p><strong>Research Agent</strong><br />I return DOI-backed metadata. You choose what becomes thesis evidence.</p></div>
+              <div class="agent-note"><span class="agent-avatar">R</span><p><strong>Research Index</strong><br />Live DOI metadata</p></div>
               <div class="paper-list" id="research-results"><div class="soft-empty">Search results will appear here.</div></div>
             </div>
             <aside class="workspace-card evidence-panel">
@@ -119,7 +118,6 @@
         <section class="section-block studio-section" id="thesis-studio">
           <div class="section-heading">
             <div><span class="eyebrow">Agent 02 · free local organization</span><h2>Thesis studio</h2></div>
-            <p>Build the literature review, methodology, and expected results from your saved evidence.</p>
           </div>
           <div class="studio-grid">
             <div class="workspace-card editor-card">
@@ -142,7 +140,7 @@
                 <li><span>03</span><div><strong>Thesis Organizer</strong><small>Builds evidence outlines</small></div></li>
                 <li><span>04</span><div><strong>Development Gate</strong><small>Waits for method approval</small></div></li>
               </ol>
-              <div class="connection-state" id="ai-status">Free local automation · no API key needed</div>
+              <div class="connection-state" id="ai-status">Local automation active</div>
             </aside>
           </div>
         </section>
@@ -150,7 +148,7 @@
         <section class="section-block" id="methodology-gate">
           <div class="gate-card locked" id="gate-card">
             <div class="gate-icon" id="gate-icon">⌾</div>
-            <div class="gate-copy"><span class="eyebrow">Required checkpoint</span><h2 id="gate-title">Development is locked</h2><p id="gate-description">Save verified evidence and finish a clear methodology. You stay in control: the prototype follows only the method you approve.</p></div>
+            <div class="gate-copy"><span class="eyebrow">Required checkpoint</span><h2 id="gate-title">Development is locked</h2><p id="gate-description">Method approval required before build execution.</p></div>
             <div class="gate-actions">
               <label class="approval-check"><input type="checkbox" id="approval-confirm" /><span>I reviewed the methodology</span></label>
               <button class="button primary" id="approve-method">Approve & unlock</button>
@@ -225,7 +223,7 @@ inbox/lab-session.png</textarea><small>One gallery-relative path per line.</smal
         </section>
 
         <section class="section-block" id="toolkit">
-          <div class="section-heading"><div><span class="eyebrow">Small by design</span><h2>Three tools. Clear jobs.</h2></div><p>No open-ended file access. The agent can only use these actions.</p></div>
+          <div class="section-heading"><div><span class="eyebrow">Tool system</span><h2>Three precise actions.</h2></div></div>
           <div class="tool-card-grid">
             <article class="tool-card"><span class="tool-number">01</span><div class="tool-symbol find-symbol">⌕</div><h3>Find images</h3><p>Matches supported files using a clear ISO date.</p><span class="code-label">retrieve_images_by_date</span></article>
             <article class="tool-card"><span class="tool-number">02</span><div class="tool-symbol folder-symbol">＋</div><h3>Create folder</h3><p>Builds a destination without leaving the gallery.</p><span class="code-label">create_folder</span></article>
@@ -235,11 +233,11 @@ inbox/lab-session.png</textarea><small>One gallery-relative path per line.</smal
 
         <section class="safety-banner" id="safety">
           <div class="safety-mark">✓</div>
-          <div><span class="eyebrow">Safety perimeter</span><h2>Your originals stay untouched.</h2><p>Paths outside the chosen gallery are blocked. Deletion is not an available tool. Existing files are never overwritten.</p></div>
+          <div><span class="eyebrow">System protection</span><h2>Protected workspace.</h2></div>
           <div class="safety-list"><span>Gallery bound</span><span>No deletion</span><span>No overwrite</span></div>
         </section>
 
-        <footer><span>FYP Agent · Research prototype</span><span>Local first. Evidence ready.</span></footer>
+        <footer><span>FYP Agent</span><span>Research system · Local runtime</span></footer>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>

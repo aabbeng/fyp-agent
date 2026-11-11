@@ -130,8 +130,8 @@ function renderWorkspace() {
   document.querySelector("#gate-icon").textContent = approved ? "✓" : "⌾";
   document.querySelector("#gate-title").textContent = approved ? "Development is unlocked" : "Development is locked";
   document.querySelector("#gate-description").textContent = approved
-    ? "Your methodology is approved. The build agent can now follow that plan. Editing the method will lock development again."
-    : "Save verified evidence and finish a clear methodology. You stay in control: the prototype follows only the method you approve.";
+    ? "Method approved. Build execution is available."
+    : "Method approval required before build execution.";
   document.querySelector("#approve-method").classList.toggle("hidden", approved);
   document.querySelector("#approval-confirm").closest("label").classList.toggle("hidden", approved);
   document.querySelector("#reopen-method").classList.toggle("hidden", !approved);
@@ -141,7 +141,7 @@ function renderWorkspace() {
   const runButton = els.form.querySelector('button[type="submit"]');
   runButton.disabled = !approved;
   runButton.title = approved ? "" : "Approve the methodology first";
-  els.aiStatus.textContent = "Free local automation · no API key or extra payment needed";
+  els.aiStatus.textContent = "Local automation active";
   const section = state.sections.find((item) => item.section_key === activeSection);
   if (section) {
     els.sectionTitle.textContent = section.title;
