@@ -408,3 +408,44 @@ footer { border-color: rgba(255,255,255,.075); }
 .source-shelf-head small{color:#738092;font-size:8px}.source-shelf-controls .count-badge{min-width:78px;font-size:9px}.planx-search-wrap{position:relative;z-index:20;margin-bottom:10px}.planx-search-wrap input{height:42px;padding-left:38px;background:rgba(5,9,15,.65)}.planx-search-wrap::before{content:"⌕";position:absolute;z-index:2;left:14px;top:10px;color:var(--aqua);font-size:17px}.planx-search-results{position:absolute;z-index:30;left:0;right:0;top:48px;display:grid;max-height:300px;overflow:auto;padding:6px;border:1px solid rgba(103,217,255,.2);border-radius:12px;background:rgba(9,14,23,.97);box-shadow:0 24px 60px rgba(0,0,0,.55);backdrop-filter:blur(24px)}.planx-search-result{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px;border:0;border-bottom:1px solid rgba(255,255,255,.06);color:var(--ink);background:transparent;text-align:left;cursor:pointer}.planx-search-result:last-child{border-bottom:0}.planx-search-result:hover{background:rgba(103,217,255,.08)}.planx-search-result:disabled{opacity:.55;cursor:default}.planx-search-result span{display:grid;gap:4px;min-width:0}.planx-search-result strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.planx-search-result small{color:#788597;font-size:8px}.planx-search-result b{color:var(--aqua);font-size:8px}.planx-no-result{padding:18px;color:#788597;text-align:center;font-size:9px}.planx-selected-list{display:grid;align-content:start;gap:7px;min-height:58px;max-height:265px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}.planx-selected-source{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-height:46px;padding:9px 10px;border:1px solid rgba(103,217,255,.14);border-radius:9px;background:rgba(103,217,255,.045)}.planx-selected-source>div{display:grid;gap:3px;min-width:0}.planx-selected-source strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}.planx-selected-source small{color:#748193;font-size:8px}.remove-planx-source{width:25px;height:25px;padding:0;border:1px solid rgba(255,255,255,.1);border-radius:7px;color:#8e9bad;background:rgba(255,255,255,.04);font-size:15px;cursor:pointer}.remove-planx-source:hover{color:#fff;border-color:rgba(255,123,141,.35);background:rgba(255,123,141,.1)}
 .operation-evidence-card{margin-top:18px}.operation-evidence-list{display:grid;align-content:start;gap:7px;max-height:310px;overflow-y:auto;overflow-x:hidden;scrollbar-gutter:stable}.operation-evidence-list article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;min-height:54px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(0,0,0,.16)}.operation-evidence-list article>div{display:grid;gap:4px;min-width:0}.operation-evidence-list strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.operation-evidence-list small{color:#768395;font-size:8px}.operation-evidence-list article>span{padding:5px 7px;border-radius:6px;color:#aeb9c7;background:rgba(255,255,255,.055);font-size:7px;font-weight:900;text-transform:uppercase}
 @media(max-width:700px){.source-shelf-head{align-items:flex-start;flex-direction:column}.source-shelf-controls{width:100%;justify-content:flex-end}.planx-selected-list{max-height:230px}.operation-evidence-list{max-height:280px}}
+
+/* System-wide layout alignment */
+.workspace-card,.control-panel,.trace-panel,.gate-card,.tool-card,.metric-card{min-width:0}
+.research-grid,.studio-grid,.lab-grid,.operation-grid,.tool-card-grid{align-items:stretch}
+.paper-list,.compact-list,.run-list,.operation-evidence-list,.planx-selected-list,.planx-search-results,.agent-chat-feed{scrollbar-gutter:stable;overscroll-behavior:contain}
+
+#research-lab .research-grid>.workspace-card{height:560px;display:flex;flex-direction:column;overflow:hidden}
+#research-lab .research-grid>.workspace-card>.paper-list{flex:1;min-height:0;max-height:none}
+#research-lab .research-grid>.workspace-card>.card-title{flex:0 0 auto}
+#research-lab #research-results,#research-lab #evidence-list{overflow-y:auto;overflow-x:hidden}
+#research-lab .paper-card{flex:0 0 auto}
+
+#automation .operation-lists{align-items:stretch}
+#automation .operation-lists>.workspace-card{height:430px;display:flex;flex-direction:column;overflow:hidden}
+#automation .operation-lists .paper-list,#automation .operation-lists .run-list{flex:1;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden}
+#automation .operation-evidence-card{height:390px;display:flex;flex-direction:column;overflow:hidden}
+#automation .operation-evidence-list{flex:1;min-height:0;max-height:none}
+
+#thesis-studio .studio-grid{align-items:stretch}
+#thesis-studio .editor-card,#thesis-studio .planx-office{height:100%}
+#thesis-studio .editor-card{display:flex;flex-direction:column}
+#thesis-studio .planx-office{display:flex;flex-direction:column}
+#thesis-studio .planx-room{flex:1;min-height:430px}
+#thesis-studio .thesis-editor textarea{height:360px;min-height:280px;max-height:520px}
+#thesis-studio .planx-source-shelf{flex:0 0 auto}
+
+#command-lab .lab-grid{align-items:stretch}
+#command-lab .control-panel,#command-lab .trace-panel{height:100%}
+.tool-card-grid>.tool-card{height:100%}
+
+@media(max-width:1050px){
+  #research-lab .research-grid>.workspace-card,#automation .operation-lists>.workspace-card,#automation .operation-evidence-card{height:auto;min-height:0}
+  #research-lab .research-grid>.workspace-card>.paper-list{max-height:430px;flex:none}
+  #automation .operation-lists .paper-list,#automation .operation-lists .run-list,#automation .operation-evidence-list{max-height:360px;flex:none}
+  #thesis-studio .editor-card,#thesis-studio .planx-office{height:auto}
+}
+
+@media(max-width:700px){
+  #research-lab .research-grid>.workspace-card>.paper-list,#automation .operation-lists .paper-list,#automation .operation-lists .run-list,#automation .operation-evidence-list{max-height:320px}
+  #thesis-studio .thesis-editor textarea{height:320px;min-height:260px}
+}
