@@ -33,8 +33,8 @@ DEMO_GALLERY = REPOSITORY_ROOT / "runtime" / "demo-gallery"
 DEMO_DATE = "2026-11-10"
 
 app = FastAPI(
-    title="FYP Agent",
-    description="Research-to-prototype workspace for the FYP agent team",
+    title="XENG",
+    description="Research-to-prototype workspace for the XENG agent system",
     version="0.3.0",
 )
 app.mount("/assets", StaticFiles(directory=FRONTEND_ROOT / "assets"), name="assets")
@@ -90,7 +90,7 @@ def dashboard() -> FileResponse:
 def health() -> dict[str, Any]:
     return {
         "status": "ready",
-        "service": "FYP Agent local runner",
+        "service": "XENG local runner",
         "allowed_tools": len(ALLOWED_TOOLS),
         "safety": "gallery-bound",
         "agents": local_team_status(),

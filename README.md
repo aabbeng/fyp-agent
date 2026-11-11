@@ -1,4 +1,4 @@
-# FYP Agent Workspace
+# XENG Workspace
 
 Development workspace for **LLM-Based Agentic AI for Tool Selection and Multi-Step Execution in Local Image Management**.
 

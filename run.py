@@ -1,4 +1,4 @@
-"""Start the local FYP Agent dashboard."""
+"""Start the local XENG dashboard."""
 
 from __future__ import annotations
 
