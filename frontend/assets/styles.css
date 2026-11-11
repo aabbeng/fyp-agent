@@ -302,6 +302,7 @@ input:focus, textarea:focus {
 .soft-empty { color: #748193; border-color: rgba(255,255,255,.1); }
 
 .section-tabs { border-color: rgba(255,255,255,.09); background: rgba(0,0,0,.12); }
+.planx-standard{display:grid;grid-template-columns:auto minmax(180px,.7fr) minmax(300px,1.3fr);gap:12px;align-items:center;margin:14px 18px 0;padding:13px 15px;border:1px solid rgba(103,217,255,.14);border-radius:13px;background:linear-gradient(110deg,rgba(103,217,255,.08),rgba(194,155,255,.05))}.planx-standard>div{display:grid;gap:3px}.planx-standard strong{font-size:11px}.planx-standard p{margin:0;color:#8f9cad;font-size:9px}.planx-flow{display:flex!important;flex-wrap:wrap;gap:6px!important}.planx-flow span{padding:6px 8px;border:1px solid rgba(255,255,255,.08);border-radius:7px;color:#aebac8;background:rgba(255,255,255,.04);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
 .section-tabs button { color: #7f8b9a; }
 .section-tabs button.active { color: #07110f; background: linear-gradient(135deg, var(--mint), var(--aqua)); }
 .agent-panel, .trace-panel {
@@ -387,3 +388,4 @@ footer { border-color: rgba(255,255,255,.075); }
 @media(max-width:1050px){.citation-importer{grid-template-columns:1fr 1fr}.import-copy{grid-column:1/-1}}
 @media(max-width:700px){.pixel-office{padding:88px 14px 30px}.office-grid{grid-template-columns:1fr}.office-wall span{font-size:9px}.speech-bubble{animation:none;opacity:1;position:relative;inset:auto;margin-bottom:8px}.pixel-desk{min-height:260px}.chat-line{grid-template-columns:auto 1fr}.chat-line time{display:none}}
 @media(max-width:700px){.citation-importer{grid-template-columns:1fr}.import-copy{grid-column:auto}.import-result{flex-direction:column}}
+@media(max-width:700px){.planx-standard{grid-template-columns:auto 1fr}.planx-flow{grid-column:1/-1}}

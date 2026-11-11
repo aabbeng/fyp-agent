@@ -76,7 +76,15 @@ class ResearchWorkflowTests(unittest.TestCase):
         content = build_evidence_outline("literature_review", [SAMPLE_PAPER])
 
         self.assertIn("10.1000/fyp.2026.1", content)
-        self.assertIn("Research gap", content)
+        self.assertIn("Research gap and FYP position", content)
+        self.assertIn("summarise, analyse, evaluate, and synthesise", content)
+        self.assertIn("CLAIM-READY", content)
+
+    def test_outline_flags_citation_only_sources(self) -> None:
+        citation_only = {**SAMPLE_PAPER, "abstract": ""}
+        content = build_evidence_outline("literature_review", [citation_only])
+        self.assertIn("BIBLIOGRAPHY-ONLY", content)
+        self.assertIn("Never invent", content)
 
     def test_draft_endpoint_builds_evidence_outline(self) -> None:
         add_evidence(EvidenceRequest(paper=SAMPLE_PAPER))

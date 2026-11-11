@@ -11,6 +11,13 @@ SECTION_NAMES = {
     "expected_results": "Expected Results",
 }
 
+PLANX_REVIEW_PRINCIPLES = (
+    "summarise", "analyse", "evaluate", "synthesise",
+    "trace how knowledge evolved", "identify debates and agreements",
+    "identify emerging trends", "identify unresolved problems and gaps",
+    "position the FYP against previous research",
+)
+
 
 def citation_label(paper: dict[str, Any]) -> str:
     authors = paper.get("authors") or []
@@ -24,22 +31,41 @@ def build_evidence_outline(section_key: str, papers: list[dict[str, Any]]) -> st
     if section_key not in SECTION_NAMES:
         raise ValueError("Unknown thesis section")
     evidence = "\n".join(
-        f"- {citation_label(paper)} — {paper['title']} [DOI: {paper['doi']}]"
+        f"- [{('CLAIM-READY' if paper.get('abstract') else 'BIBLIOGRAPHY-ONLY')}] "
+        f"{citation_label(paper)} — {paper['title']} [DOI: {paper['doi']}]"
         for paper in papers
     ) or "- No verified papers saved yet. Add evidence before writing claims."
 
     if section_key == "literature_review":
         return (
-            "## Draft structure\n\n"
-            "### 1. LLM-based agents and tool use\n"
-            "Explain the move from text generation to tool-supported actions.\n\n"
-            "### 2. Function calling and tool selection\n"
-            "Compare how prior studies evaluate correct tools and arguments.\n\n"
-            "### 3. Multi-step execution and feedback\n"
-            "Discuss dependent actions, observations, and recovery from failure.\n\n"
-            "### 4. Research gap\n"
-            "State what is still unknown for lightweight models in a controlled local gallery.\n\n"
-            f"## Verified evidence\n{evidence}"
+            "## Planx literature review workspace\n\n"
+            "### Review goal\n"
+            "Build a critical and evidence-linked account of existing knowledge—not a list of paper summaries. "
+            "The review must summarise, analyse, evaluate, and synthesise the key literature.\n\n"
+            "### 1. Scope and source selection\n"
+            "Define the specific research area, inclusion boundaries, and why each key source is relevant. "
+            "Use a comprehensive thesis approach while keeping only sources that support the research problem.\n\n"
+            "### 2. Development of knowledge\n"
+            "Explain how the field moved from language-model reasoning to tool use, function calling, "
+            "multi-step agents, feedback, and evaluation. Distinguish established findings from emerging work.\n\n"
+            "### 3. Thematic synthesis\n"
+            "Group evidence across sources under themes rather than reviewing one paper at a time:\n"
+            "- LLM-based agents and tool use\n"
+            "- Function calling and tool selection\n"
+            "- Multi-step execution, observation, and recovery\n"
+            "- Evaluation benchmarks, reliability, and safety\n\n"
+            "### 4. Critical evaluation\n"
+            "Compare methods and evidence quality. Identify agreements, contradictions, controversies, "
+            "limitations, unresolved problems, and promising new approaches.\n\n"
+            "### 5. Research gap and FYP position\n"
+            "State what remains under-researched and explain clearly how this FYP extends, builds upon, "
+            "or departs from previous work on controlled local tool-using agents.\n\n"
+            "### Planx writing rules\n"
+            "- Never invent a paper's findings, method, or limitations.\n"
+            "- BIBLIOGRAPHY-ONLY sources need an abstract or full-text check before supporting detailed claims.\n"
+            "- Every major comparison or claim must be connected to approved evidence.\n"
+            "- End each theme with synthesis, not a source-by-source summary.\n\n"
+            f"## Evidence readiness map\n{evidence}"
         )
     if section_key == "methodology":
         return (
