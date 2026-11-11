@@ -204,6 +204,12 @@ h1, h2, h3, h4, .brand, .mobile-brand, .metric-card strong, .card-title, .thesis
   background: linear-gradient(110deg, rgba(255,255,255,.13), rgba(255,255,255,.05));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
 }
+.nav-item { position:relative; isolation:isolate; overflow:hidden; border:1px solid transparent; }
+.nav-item::before { content:""; position:absolute; z-index:-1; inset:0; opacity:0; background:linear-gradient(115deg,rgba(103,217,255,.15),rgba(255,255,255,.08) 48%,rgba(194,155,255,.12)); backdrop-filter:blur(18px) saturate(170%); -webkit-backdrop-filter:blur(18px) saturate(170%); transition:opacity .22s ease; }
+.nav-item:hover,.nav-item:focus-visible { color:#fff; border-color:rgba(255,255,255,.14); box-shadow:0 10px 30px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.13); transform:translateX(3px); outline:none; }
+.nav-item:hover::before,.nav-item:focus-visible::before,.nav-item.active::before { opacity:1; }
+.nav-item.active { border-color:rgba(255,255,255,.12); box-shadow:0 10px 28px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12); }
+.nav-item:hover .nav-icon,.nav-item:focus-visible .nav-icon,.nav-item.active .nav-icon { color:#8eead9; filter:drop-shadow(0 0 8px rgba(103,217,255,.48)); }
 .nav-icon { color: var(--aqua); }
 .sidebar-card, .status-pill, .workspace-card, .metric-card, .control-panel, .tool-card, .gate-card, .safety-banner {
   border: 1px solid rgba(255, 255, 255, .12);
