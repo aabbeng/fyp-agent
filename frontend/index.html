@@ -186,15 +186,18 @@
                 <button data-section="methodology">Methodology</button>
                 <button data-section="expected_results">Expected results</button>
               </div>
-              <div class="planx-standard">
-                <span class="agent-avatar">P</span>
-                <div><strong>Planx review standard</strong><p>Summarise · Analyse · Evaluate · Synthesise</p></div>
-                <div class="planx-flow"><span>Knowledge evolution</span><span>Debates & trends</span><span>Research gaps</span><span>FYP position</span></div>
+              <div class="studio-context">
+                <div><span class="context-dot"></span><strong>Academic synthesis mode</strong></div>
+                <span id="studio-word-count">0 words</span>
               </div>
-              <label class="field-group thesis-editor"><span id="section-title">Literature Review</span><textarea id="section-content" rows="18" placeholder="Your evidence-linked draft will appear here..."></textarea></label>
+              <label class="field-group thesis-editor"><span id="section-title">Literature Review</span><textarea id="section-content" rows="14" placeholder="Planx will prepare an academic draft from your approved evidence..."></textarea></label>
               <div class="editor-actions">
                 <button class="button ghost" id="save-section">Save draft</button>
-                <button class="button ghost" id="build-outline">Build evidence outline</button>
+                <button class="button primary" id="build-outline">Ask Planx to write</button>
+              </div>
+              <div class="planx-source-shelf">
+                <div class="source-shelf-head"><div><span class="eyebrow">Separate evidence shelf</span><strong>Sources Planx is using</strong></div><span class="count-badge" id="planx-source-count">0</span></div>
+                <div class="planx-source-list" id="planx-source-list"><div class="soft-empty">Import or approve papers to give Planx evidence.</div></div>
               </div>
             </div>
             <aside class="workspace-card planx-office state-idle" id="planx-office">
@@ -204,7 +207,7 @@
                 <div class="planx-shelf"><i></i><i></i><i></i><i></i></div>
                 <div class="planx-bubble" id="planx-bubble">Send me approved evidence when you're ready.</div>
                 <button class="planx-character" id="planx-character" type="button" aria-label="Talk to Planx">
-                  <i class="px-hair-back"></i><i class="px-head"></i><i class="px-hair"></i><i class="px-glasses left"></i><i class="px-glasses right"></i><i class="px-body"></i><i class="px-arm left"></i><i class="px-arm right"></i>
+                  <i class="px-hair-back"></i><i class="px-head"></i><i class="px-hair"></i><i class="px-headset"></i><i class="px-glasses left"></i><i class="px-glasses right"></i><i class="px-body"></i><i class="px-collar"></i><i class="px-arm left"></i><i class="px-arm right"></i>
                 </button>
                 <div class="planx-desk"><i class="px-monitor"></i><i class="px-screen-line one"></i><i class="px-screen-line two"></i><i class="px-keyboard"></i><i class="px-paper"></i><i class="px-cup"></i><i class="px-steam one"></i><i class="px-steam two"></i></div>
                 <div class="planx-rug"></div>

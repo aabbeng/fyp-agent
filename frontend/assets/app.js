@@ -38,6 +38,9 @@ const els = {
   planxStatus: document.querySelector("#planx-status"),
   planxBubble: document.querySelector("#planx-bubble"),
   planxCharacter: document.querySelector("#planx-character"),
+  planxSourceCount: document.querySelector("#planx-source-count"),
+  planxSourceList: document.querySelector("#planx-source-list"),
+  studioWordCount: document.querySelector("#studio-word-count"),
 };
 
 let workspaceState = null;
@@ -159,6 +162,23 @@ function paperCard(paper, index, saved = false) {
   </article>`;
 }
 
+function renderPlanxSources(papers) {
+  if (!els.planxSourceList) return;
+  els.planxSourceCount.textContent = papers.length;
+  els.planxSourceList.innerHTML = papers.length ? papers.map((paper) => {
+    const lead = (paper.authors || ["Unknown"])[0].split(" ").slice(-1)[0];
+    const citation = `${lead}${(paper.authors || []).length > 1 ? " et al." : ""}, ${paper.year || "n.d."}`;
+    const readiness = paper.abstract ? "Claim-ready" : "Citation approved";
+    return `<article class="planx-source"><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML(citation)} · ${escapeHTML(paper.source || "Evidence library")}</small></div><span class="source-readiness ${paper.abstract ? "ready" : "citation"}">${readiness}</span></article>`;
+  }).join("") : '<div class="soft-empty">Import or approve papers to give Planx evidence.</div>';
+}
+
+function updateWordCount() {
+  if (!els.studioWordCount) return;
+  const words = els.sectionContent.value.trim().split(/\s+/).filter(Boolean).length;
+  els.studioWordCount.textContent = `${words} word${words === 1 ? "" : "s"}`;
+}
+
 if (els.citationFile) {
   els.citationFile.addEventListener("change", () => {
     const file = els.citationFile.files[0];
@@ -221,7 +241,9 @@ function renderWorkspace() {
   if (section) {
     els.sectionTitle.textContent = section.title;
     els.sectionContent.value = section.content;
+    updateWordCount();
   }
+  renderPlanxSources(state.papers || []);
   const candidates = state.research_candidates || [];
   els.candidateCount.textContent = candidates.length;
   els.candidateList.innerHTML = candidates.length ? candidates.map((candidate) => {
@@ -369,10 +391,10 @@ async function draftSection() {
       body: JSON.stringify({ section_key: activeSection }),
     });
     await loadWorkspace();
-    setPlanxState("done", "Evidence outline ready. Please review my structure before saving it.", true);
-    showToast("Evidence outline created locally.");
+    setPlanxState("done", "Academic draft ready. Please review the wording and citations before saving it.", true);
+    showToast("Planx prepared an evidence-linked academic draft.");
   } catch (error) { setPlanxState("error", error.message, true); showToast(error.message); }
-  finally { button.disabled = false; button.textContent = "Build evidence outline"; }
+  finally { button.disabled = false; button.textContent = "Ask Planx to write"; }
 }
 
 document.querySelector("#build-outline").addEventListener("click", draftSection);
@@ -385,6 +407,8 @@ if (els.planxCharacter) {
     setPlanxState("done", messages[planxHello++ % messages.length], true);
   });
 }
+
+els.sectionContent.addEventListener("input", updateWordCount);
 
 document.querySelector("#approve-method").addEventListener("click", async () => {
   try {

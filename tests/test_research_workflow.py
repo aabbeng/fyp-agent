@@ -72,19 +72,19 @@ class ResearchWorkflowTests(unittest.TestCase):
         self.assertEqual(state["paper_count"], 1)
         self.assertEqual(state["papers"][0]["source"], "Crossref")
 
-    def test_outline_uses_saved_doi(self) -> None:
+    def test_academic_draft_uses_in_text_citation(self) -> None:
         content = build_evidence_outline("literature_review", [SAMPLE_PAPER])
 
-        self.assertIn("10.1000/fyp.2026.1", content)
-        self.assertIn("Research gap and FYP position", content)
-        self.assertIn("summarise, analyse, evaluate, and synthesise", content)
-        self.assertIn("CLAIM-READY", content)
+        self.assertIn("Evaluation and Research Gap", content)
+        self.assertIn("(Rahman et al., 2026)", content)
+        self.assertNotIn("##", content)
+        self.assertNotIn("- ", content)
 
     def test_outline_flags_citation_only_sources(self) -> None:
         citation_only = {**SAMPLE_PAPER, "abstract": ""}
         content = build_evidence_outline("literature_review", [citation_only])
-        self.assertIn("BIBLIOGRAPHY-ONLY", content)
-        self.assertIn("Never invent", content)
+        self.assertIn("verified abstracts or full papers", content)
+        self.assertNotIn("##", content)
 
     def test_draft_endpoint_builds_evidence_outline(self) -> None:
         add_evidence(EvidenceRequest(paper=SAMPLE_PAPER))
@@ -92,7 +92,7 @@ class ResearchWorkflowTests(unittest.TestCase):
         result = draft_thesis_section(DraftRequest(section_key="expected_results"))
 
         self.assertEqual(result["mode"], "local_outline")
-        self.assertIn("not actual findings", result["section"]["content"])
+        self.assertIn("predictions rather than research findings", result["section"]["content"])
 
     def test_methodology_requires_evidence_and_substantial_draft(self) -> None:
         with self.assertRaises(HTTPException):
