@@ -23,7 +23,7 @@ DEFAULT_TOPICS = (
 
 
 def research_topics() -> list[str]:
-    raw = os.getenv("XENG_RESEARCH_TOPICS", DEFAULT_TOPICS)
+    raw = os.getenv("XENG_RESEARCH_TOPICS", "").strip() or DEFAULT_TOPICS
     return [topic.strip() for topic in raw.split(";") if topic.strip()]
 
 

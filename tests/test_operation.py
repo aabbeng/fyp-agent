@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from application import database
 from application.auth import create_session, password_valid, session_valid
-from application.automation import run_research_cycle
+from application.automation import research_topics, run_research_cycle
 
 
 PAPER = {
@@ -41,6 +41,10 @@ class OperationTests(unittest.TestCase):
         self.assertEqual(database.list_papers(), [])
         database.approve_candidate(PAPER["doi"])
         self.assertEqual(len(database.list_papers()), 1)
+
+    @patch.dict(os.environ, {"XENG_RESEARCH_TOPICS": ""})
+    def test_empty_topic_variable_uses_defaults(self) -> None:
+        self.assertGreater(len(research_topics()), 0)
 
     @patch("application.automation.send_telegram", return_value=True)
     @patch("application.automation.search_papers", return_value=[PAPER])
