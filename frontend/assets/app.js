@@ -41,8 +41,11 @@ const els = {
   planxSourceCount: document.querySelector("#planx-source-count"),
   planxSourceList: document.querySelector("#planx-source-list"),
   studioWordCount: document.querySelector("#studio-word-count"),
-  selectAllSources: document.querySelector("#select-all-sources"),
   clearAllSources: document.querySelector("#clear-all-sources"),
+  planxSourceSearch: document.querySelector("#planx-source-search"),
+  planxSearchResults: document.querySelector("#planx-search-results"),
+  operationEvidenceCount: document.querySelector("#operation-evidence-count"),
+  operationEvidenceList: document.querySelector("#operation-evidence-list"),
 };
 
 let workspaceState = null;
@@ -170,25 +173,46 @@ function renderPlanxSources(papers) {
   if (!els.planxSourceList) return;
   if (!planxSelectionLoaded) {
     const stored = window.localStorage.getItem("xeng-planx-sources");
-    try { selectedPlanxDois = new Set(stored === null ? papers.map((paper) => paper.doi) : JSON.parse(stored)); }
-    catch { selectedPlanxDois = new Set(papers.map((paper) => paper.doi)); }
+    try { selectedPlanxDois = new Set(stored === null ? [] : JSON.parse(stored)); }
+    catch { selectedPlanxDois = new Set(); }
     planxSelectionLoaded = true;
   }
   const available = new Set(papers.map((paper) => paper.doi));
   selectedPlanxDois = new Set([...selectedPlanxDois].filter((doi) => available.has(doi)));
-  els.planxSourceCount.textContent = `${selectedPlanxDois.size}/${papers.length}`;
-  els.planxSourceList.innerHTML = papers.length ? papers.map((paper) => {
+  els.planxSourceCount.textContent = `${selectedPlanxDois.size} selected`;
+  const selected = papers.filter((paper) => selectedPlanxDois.has(paper.doi));
+  els.planxSourceList.innerHTML = selected.length ? selected.map((paper) => {
     const lead = (paper.authors || ["Unknown"])[0].split(" ").slice(-1)[0];
     const citation = `${lead}${(paper.authors || []).length > 1 ? " et al." : ""}, ${paper.year || "n.d."}`;
-    const readiness = paper.abstract ? "Claim-ready" : "Citation approved";
-    return `<label class="planx-source ${selectedPlanxDois.has(paper.doi) ? "selected" : ""}"><input class="planx-source-check" type="checkbox" data-doi="${escapeHTML(paper.doi)}" ${selectedPlanxDois.has(paper.doi) ? "checked" : ""} /><span class="source-checkmark">✓</span><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML(citation)} · ${escapeHTML(paper.source || "Evidence library")}</small></div><span class="source-readiness ${paper.abstract ? "ready" : "citation"}">${readiness}</span></label>`;
-  }).join("") : '<div class="soft-empty">Import or approve papers to give Planx evidence.</div>';
+    return `<article class="planx-selected-source"><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML(citation)}</small></div><button type="button" class="remove-planx-source" data-doi="${escapeHTML(paper.doi)}" aria-label="Remove ${escapeHTML(paper.title)}">×</button></article>`;
+  }).join("") : '<div class="soft-empty">No papers selected. Search above to add evidence.</div>';
+  renderPlanxSearchResults(papers);
+}
+
+function renderPlanxSearchResults(papers = workspaceState?.papers || []) {
+  const query = (els.planxSourceSearch?.value || "").trim().toLowerCase();
+  if (!query) return els.planxSearchResults.classList.add("hidden");
+  const matches = papers.filter((paper) => {
+    const haystack = [paper.title, ...(paper.authors || []), paper.year].join(" ").toLowerCase();
+    return haystack.includes(query);
+  }).slice(0, 5);
+  els.planxSearchResults.innerHTML = matches.length ? matches.map((paper) => {
+    const added = selectedPlanxDois.has(paper.doi);
+    return `<button type="button" class="planx-search-result" data-doi="${escapeHTML(paper.doi)}" ${added ? "disabled" : ""}><span><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML((paper.authors || []).slice(0, 2).join(", "))} · ${escapeHTML(paper.year || "n.d.")}</small></span><b>${added ? "Added" : "+ Add"}</b></button>`;
+  }).join("") : '<div class="planx-no-result">No approved papers match that search.</div>';
+  els.planxSearchResults.classList.remove("hidden");
+}
+
+function renderOperationEvidence(papers) {
+  if (!els.operationEvidenceList) return;
+  els.operationEvidenceCount.textContent = papers.length;
+  els.operationEvidenceList.innerHTML = papers.length ? papers.map((paper) => `<article><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML((paper.authors || ["Unknown"])[0])} · ${escapeHTML(paper.year || "n.d.")}</small></div><span>${paper.abstract ? "Claim-ready" : "Citation approved"}</span></article>`).join("") : '<div class="soft-empty">No approved papers yet.</div>';
 }
 
 function savePlanxSelection(rerender = true) {
   window.localStorage.setItem("xeng-planx-sources", JSON.stringify([...selectedPlanxDois]));
   if (rerender) renderPlanxSources(workspaceState?.papers || []);
-  else els.planxSourceCount.textContent = `${selectedPlanxDois.size}/${workspaceState?.papers?.length || 0}`;
+  else els.planxSourceCount.textContent = `${selectedPlanxDois.size} selected`;
 }
 
 function updateWordCount() {
@@ -262,6 +286,7 @@ function renderWorkspace() {
     updateWordCount();
   }
   renderPlanxSources(state.papers || []);
+  renderOperationEvidence(state.papers || []);
   const candidates = state.research_candidates || [];
   els.candidateCount.textContent = candidates.length;
   els.candidateList.innerHTML = candidates.length ? candidates.map((candidate) => {
@@ -433,20 +458,24 @@ if (els.planxCharacter) {
 
 els.sectionContent.addEventListener("input", updateWordCount);
 
-els.planxSourceList.addEventListener("change", (event) => {
-  const checkbox = event.target.closest(".planx-source-check");
-  if (!checkbox) return;
-  if (checkbox.checked) selectedPlanxDois.add(checkbox.dataset.doi);
-  else selectedPlanxDois.delete(checkbox.dataset.doi);
-  checkbox.closest(".planx-source").classList.toggle("selected", checkbox.checked);
-  savePlanxSelection(false);
+els.planxSourceSearch.addEventListener("input", () => renderPlanxSearchResults());
+
+els.planxSearchResults.addEventListener("click", (event) => {
+  const button = event.target.closest(".planx-search-result");
+  if (!button || button.disabled) return;
+  selectedPlanxDois.add(button.dataset.doi);
+  savePlanxSelection();
+  els.planxSourceSearch.value = "";
+  els.planxSearchResults.classList.add("hidden");
   setPlanxState("idle", `${selectedPlanxDois.size} source${selectedPlanxDois.size === 1 ? "" : "s"} selected for my next draft.`);
 });
 
-els.selectAllSources.addEventListener("click", () => {
-  selectedPlanxDois = new Set((workspaceState?.papers || []).map((paper) => paper.doi));
+els.planxSourceList.addEventListener("click", (event) => {
+  const button = event.target.closest(".remove-planx-source");
+  if (!button) return;
+  selectedPlanxDois.delete(button.dataset.doi);
   savePlanxSelection();
-  setPlanxState("idle", "All approved sources selected. I’ll still keep claim-level checks visible.");
+  setPlanxState("idle", `${selectedPlanxDois.size} source${selectedPlanxDois.size === 1 ? "" : "s"} selected for my next draft.`);
 });
 
 els.clearAllSources.addEventListener("click", () => {

@@ -140,6 +140,7 @@
             <article class="workspace-card"><div class="card-title"><div><span class="eyebrow">Human checkpoint</span><h3>Papers waiting for review</h3></div><span class="count-badge" id="candidate-count">0</span></div><div class="paper-list" id="candidate-list"><div class="soft-empty">The next operation will add papers here.</div></div></article>
             <article class="workspace-card"><div class="card-title"><div><span class="eyebrow">Audit trail</span><h3>Recent runs</h3></div></div><div class="run-list" id="run-list"><div class="soft-empty">No autonomous runs yet.</div></div></article>
           </div>
+          <article class="workspace-card operation-evidence-card"><div class="card-title"><div><span class="eyebrow">Planx evidence pool</span><h3>Approved paper library</h3></div><span class="count-badge" id="operation-evidence-count">0</span></div><div class="operation-evidence-list" id="operation-evidence-list"><div class="soft-empty">No approved papers yet.</div></div></article>
         </section>
 
         <section class="metric-grid" aria-label="Project metrics">
@@ -197,8 +198,9 @@
                 <button class="button primary" id="build-outline">Ask Planx to write</button>
               </div>
               <div class="planx-source-shelf">
-                <div class="source-shelf-head"><div><strong>Choose sources for Planx</strong></div><div class="source-shelf-controls"><button type="button" id="select-all-sources">Select all</button><button type="button" id="clear-all-sources">Clear</button><span class="count-badge" id="planx-source-count">0</span></div></div>
-                <div class="planx-source-list" id="planx-source-list"><div class="soft-empty">Import or approve papers to give Planx evidence.</div></div>
+                <div class="source-shelf-head"><div><strong>Choose sources for Planx</strong><small>Search, then add only the papers you want used.</small></div><div class="source-shelf-controls"><button type="button" id="clear-all-sources">Clear</button><span class="count-badge" id="planx-source-count">0 selected</span></div></div>
+                <div class="planx-search-wrap"><input id="planx-source-search" type="search" placeholder="Search title, author or year…" autocomplete="off" /><div class="planx-search-results hidden" id="planx-search-results"></div></div>
+                <div class="planx-selected-list" id="planx-source-list"><div class="soft-empty">No papers selected. Search above to add evidence.</div></div>
               </div>
             </div>
             <aside class="workspace-card planx-office state-idle" id="planx-office">
