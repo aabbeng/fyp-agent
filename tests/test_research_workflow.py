@@ -35,7 +35,7 @@ SAMPLE_PAPER = {
 }
 
 
-class ResearchWorkflowTests(unittest.IsolatedAsyncioTestCase):
+class ResearchWorkflowTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.original_db_path = database.DB_PATH

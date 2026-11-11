@@ -1,4 +1,4 @@
-"""Local API and dashboard server for the image-management agent."""
+"""API and dashboard server for the XENG workspace."""
 
 from __future__ import annotations
 
@@ -7,16 +7,29 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from application.controller import ALLOWED_TOOLS, execute_tool
+from application.auth import (
+    COOKIE_NAME,
+    SESSION_SECONDS,
+    auth_required,
+    create_session,
+    password_valid,
+    secure_cookies,
+    session_valid,
+)
 from application.database import (
+    approve_candidate,
+    backend_name,
     get_section,
     get_sections,
     list_activities,
+    list_candidates,
+    list_job_runs,
     list_papers,
     log_activity,
     methodology_status,
@@ -24,6 +37,7 @@ from application.database import (
     save_section,
     set_methodology_status,
 )
+from application.notifications import telegram_configured
 from application.research import ResearchSearchError, search_papers
 from application.thesis import build_evidence_outline
 
@@ -66,12 +80,29 @@ class ApprovalRequest(BaseModel):
     notes: str = ""
 
 
+class LoginRequest(BaseModel):
+    password: str = Field(min_length=1)
+
+
 def local_team_status() -> dict[str, Any]:
     return {
-        "mode": "free-local",
+        "mode": "cloud-ready" if os.getenv("DATABASE_URL") else "free-local",
         "paid_api": False,
         "agents": ["Coordinator", "Research Assistant", "Thesis Organizer", "Development Gate"],
     }
+
+
+@app.middleware("http")
+async def protect_api(request: Request, call_next):
+    public_paths = {"/api/health", "/api/auth/status", "/api/auth/login"}
+    if (
+        auth_required()
+        and request.url.path.startswith("/api/")
+        and request.url.path not in public_paths
+        and not session_valid(request.cookies.get(COOKIE_NAME))
+    ):
+        return JSONResponse({"detail": "Please sign in to XENG"}, status_code=401)
+    return await call_next(request)
 
 
 def _create_demo_image(path: Path, hour: int) -> None:
@@ -90,12 +121,45 @@ def dashboard() -> FileResponse:
 def health() -> dict[str, Any]:
     return {
         "status": "ready",
-        "service": "XENG local runner",
+        "service": "XENG operation",
         "allowed_tools": len(ALLOWED_TOOLS),
         "safety": "gallery-bound",
         "agents": local_team_status(),
         "methodology": methodology_status()["status"],
+        "database": backend_name(),
+        "login_required": auth_required(),
+        "telegram_configured": telegram_configured(),
     }
+
+
+@app.get("/api/auth/status")
+def auth_status(request: Request) -> dict[str, bool]:
+    required = auth_required()
+    return {
+        "required": required,
+        "authenticated": not required or session_valid(request.cookies.get(COOKIE_NAME)),
+    }
+
+
+@app.post("/api/auth/login")
+def login(request: LoginRequest, response: Response) -> dict[str, bool]:
+    if not password_valid(request.password):
+        raise HTTPException(status_code=401, detail="Wrong password")
+    response.set_cookie(
+        COOKIE_NAME,
+        create_session(),
+        max_age=SESSION_SECONDS,
+        httponly=True,
+        secure=secure_cookies(),
+        samesite="strict",
+    )
+    return {"success": True}
+
+
+@app.post("/api/auth/logout")
+def logout(response: Response) -> dict[str, bool]:
+    response.delete_cookie(COOKIE_NAME)
+    return {"success": True}
 
 
 @app.get("/api/workspace")
@@ -111,7 +175,30 @@ def workspace() -> dict[str, Any]:
         "build_unlocked": gate["status"] == "approved",
         "agent_team": local_team_status(),
         "activities": list_activities(12),
+        "research_candidates": list_candidates("pending", 50),
+        "job_runs": list_job_runs(12),
+        "operation": {
+            "database": backend_name(),
+            "telegram": telegram_configured(),
+            "schedule": "Every 6 hours on GitHub Actions",
+        },
     }
+
+
+@app.get("/api/research/candidates")
+def research_candidates() -> dict[str, Any]:
+    candidates = list_candidates("pending", 100)
+    return {"count": len(candidates), "candidates": candidates}
+
+
+@app.post("/api/research/candidates/{doi:path}/approve")
+def approve_research_candidate(doi: str) -> dict[str, Any]:
+    try:
+        paper = approve_candidate(doi)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    log_activity("Research Agent", "Candidate approved", paper["title"])
+    return {"success": True, "paper": paper}
 
 
 @app.get("/api/research/search")

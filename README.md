@@ -45,3 +45,25 @@ $env:CROSSREF_MAILTO="your-university-email@example.com"
 No OpenAI API key or paid AI subscription is required.
 
 Research papers, drafts, approval state, and activity history are stored locally in `runtime/fyp-agent.db`. The `runtime/` folder is ignored by Git.
+
+## Put XENG online
+
+This setup keeps the dashboard online and runs research every 6 hours without a paid AI API:
+
+1. Create a free Supabase project. In **Connect**, copy the session-pooler PostgreSQL connection string.
+2. In Render, create a **Blueprint** from this repository. Render reads `render.yaml`.
+3. Add these private Render values: `DATABASE_URL`, `XENG_ADMIN_PASSWORD`, and `CROSSREF_MAILTO`.
+4. In GitHub → **Settings → Secrets and variables → Actions**, add secrets named `DATABASE_URL`, `CROSSREF_MAILTO`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID`.
+5. Optionally add the repository variable `XENG_RESEARCH_TOPICS`. Separate topics with semicolons.
+6. Merge this branch into the default branch. GitHub scheduled workflows run from the default branch.
+
+The autonomous worker only adds papers to a **pending review queue**. You approve a paper before it enters the thesis evidence library. It never auto-approves methodology or executes the prototype.
+
+The free Render service can sleep when unused, but GitHub Actions still runs the research operation and writes results into Supabase. Telegram sends the run summary to you.
+
+### Telegram setup
+
+1. Message `@BotFather` in Telegram, create a bot, and copy its token.
+2. Send one message to your new bot.
+3. Open `https://api.telegram.org/botYOUR_TOKEN/getUpdates` and copy the numeric `chat.id`.
+4. Save both values as GitHub Actions secrets. Never commit them to this repository.

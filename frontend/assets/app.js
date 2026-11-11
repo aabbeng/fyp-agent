@@ -24,6 +24,10 @@ const els = {
   gateMetric: document.querySelector("#gate-metric"),
   buildState: document.querySelector("#build-state"),
   aiStatus: document.querySelector("#ai-status"),
+  loginScreen: document.querySelector("#login-screen"),
+  candidateCount: document.querySelector("#candidate-count"),
+  candidateList: document.querySelector("#candidate-list"),
+  runList: document.querySelector("#run-list"),
 };
 
 let workspaceState = null;
@@ -38,8 +42,12 @@ function escapeHTML(value = "") {
 
 async function api(url, options = {}) {
   const response = await fetch(url, options);
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail || "Request failed");
+  const text = await response.text();
+  let data = {};
+  try { data = text ? JSON.parse(text) : {}; }
+  catch { data = { detail: text || `Server returned ${response.status}` }; }
+  if (response.status === 401) els.loginScreen.classList.remove("hidden");
+  if (!response.ok) throw new Error(data.detail || `Request failed (${response.status})`);
   return data;
 }
 
@@ -147,7 +155,28 @@ function renderWorkspace() {
     els.sectionTitle.textContent = section.title;
     els.sectionContent.value = section.content;
   }
+  const candidates = state.research_candidates || [];
+  els.candidateCount.textContent = candidates.length;
+  els.candidateList.innerHTML = candidates.length ? candidates.map((candidate) => {
+    const paper = candidate.paper;
+    return `<article class="paper-card"><div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>Pending</span></div><h4>${escapeHTML(paper.title)}</h4><p>${escapeHTML(candidate.query)}</p><div class="paper-foot"><a href="${escapeHTML(paper.url)}" target="_blank" rel="noreferrer">${escapeHTML(paper.doi)}</a><button class="button compact ghost approve-candidate" data-doi="${escapeHTML(paper.doi)}">Approve</button></div></article>`;
+  }).join("") : '<div class="soft-empty">The next operation will add papers here.</div>';
+  const runs = state.job_runs || [];
+  els.runList.innerHTML = runs.length ? runs.map((run) => `<div class="run-item"><strong>${escapeHTML(run.job_name)} · ${escapeHTML(run.status)}</strong><small>${escapeHTML(run.started_at)}</small></div>`).join("") : '<div class="soft-empty">No autonomous runs yet.</div>';
+  document.querySelector("#operation-database").textContent = state.operation.database === "postgresql" ? "Supabase connected" : "Local SQLite";
+  document.querySelector("#operation-telegram").textContent = state.operation.telegram ? "Connected" : "Not connected";
+  document.querySelector("#operation-schedule").textContent = state.operation.schedule;
 }
+
+els.candidateList.addEventListener("click", async (event) => {
+  const button = event.target.closest(".approve-candidate");
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await api(`/api/research/candidates/${encodeURIComponent(button.dataset.doi)}/approve`, { method: "POST" });
+    await loadWorkspace(); showToast("Paper approved and added to evidence.");
+  } catch (error) { button.disabled = false; showToast(error.message); }
+});
 
 async function loadWorkspace() {
   try {
@@ -299,6 +328,29 @@ els.form.addEventListener("submit", async (event) => {
 document.querySelector("#load-demo").addEventListener("click", loadDemo);
 document.querySelector("#refresh-health").addEventListener("click", checkHealth);
 
+document.querySelector("#login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const error = document.querySelector("#login-error");
+  try {
+    await api("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: document.querySelector("#login-password").value }) });
+    els.loginScreen.classList.add("hidden"); error.textContent = ""; await loadWorkspace();
+  } catch (loginError) { error.textContent = loginError.message; }
+});
+
+document.querySelector("#logout-button").addEventListener("click", async () => {
+  await api("/api/auth/logout", { method: "POST" });
+  els.loginScreen.classList.remove("hidden");
+});
+
+async function checkAuth() {
+  try {
+    const status = await api("/api/auth/status");
+    els.loginScreen.classList.toggle("hidden", status.authenticated);
+    document.querySelector("#logout-button").classList.toggle("hidden", !status.required);
+    if (status.authenticated) await loadWorkspace();
+  } catch (error) { showToast(error.message); }
+}
+
 const navItems = [...document.querySelectorAll(".nav-item")];
 const sections = navItems.map((item) => document.querySelector(item.getAttribute("href"))).filter(Boolean);
 const observer = new IntersectionObserver((entries) => {
@@ -309,4 +361,4 @@ const observer = new IntersectionObserver((entries) => {
 sections.forEach((section) => observer.observe(section));
 
 checkHealth();
-loadWorkspace();
+checkAuth();

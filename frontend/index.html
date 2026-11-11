@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <div class="login-screen hidden" id="login-screen">
+      <form class="login-card" id="login-form">
+        <span class="brand-mark login-mark" aria-hidden="true">X</span>
+        <span class="eyebrow">Private workspace</span>
+        <h1>Enter XENG</h1>
+        <p>Your research operation is protected.</p>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="Workspace password" required />
+        <button class="button primary" type="submit">Sign in</button>
+        <small id="login-error"></small>
+      </form>
+    </div>
     <div class="app-shell">
       <aside class="sidebar">
         <a class="brand" href="#top" aria-label="XENG home">
@@ -29,6 +40,9 @@
           </a>
           <a class="nav-item" href="#methodology-gate">
             <span class="nav-icon">✓</span><span>Method gate</span>
+          </a>
+          <a class="nav-item" href="#automation">
+            <span class="nav-icon">↻</span><span>Operation</span>
           </a>
           <a class="nav-item" href="#command-lab">
             <span class="nav-icon">⌁</span><span>Build lab</span>
@@ -60,6 +74,7 @@
           </div>
           <div class="top-actions">
             <span class="status-pill"><span class="pulse-dot"></span> Guardrails on</span>
+            <button class="button compact ghost hidden" id="logout-button">Sign out</button>
             <button class="icon-button" id="refresh-health" title="Refresh runner status" aria-label="Refresh runner status">↻</button>
           </div>
         </header>
@@ -85,6 +100,21 @@
             <div class="float-chip chip-one"><span>01</span> Research</div>
             <div class="float-chip chip-two"><span>02</span> Write</div>
             <div class="float-chip chip-three"><span>03</span> Build</div>
+          </div>
+        </section>
+
+        <section class="section-block" id="automation">
+          <div class="section-heading">
+            <div><span class="eyebrow">Autonomous research</span><h2>Operation centre</h2></div>
+          </div>
+          <div class="operation-grid">
+            <article class="workspace-card operation-card"><span class="eyebrow">Schedule</span><strong id="operation-schedule">Every 6 hours</strong><small>GitHub Actions</small></article>
+            <article class="workspace-card operation-card"><span class="eyebrow">Storage</span><strong id="operation-database">Local</strong><small>Persistent when cloud connected</small></article>
+            <article class="workspace-card operation-card"><span class="eyebrow">Updates</span><strong id="operation-telegram">Not connected</strong><small>Telegram summaries</small></article>
+          </div>
+          <div class="research-grid operation-lists">
+            <article class="workspace-card"><div class="card-title"><div><span class="eyebrow">Human checkpoint</span><h3>Papers waiting for review</h3></div><span class="count-badge" id="candidate-count">0</span></div><div class="paper-list" id="candidate-list"><div class="soft-empty">The next operation will add papers here.</div></div></article>
+            <article class="workspace-card"><div class="card-title"><div><span class="eyebrow">Audit trail</span><h3>Recent runs</h3></div></div><div class="run-list" id="run-list"><div class="soft-empty">No autonomous runs yet.</div></div></article>
           </div>
         </section>
 
@@ -237,7 +267,7 @@ inbox/lab-session.png</textarea><small>One gallery-relative path per line.</smal
           <div class="safety-list"><span>Gallery bound</span><span>No deletion</span><span>No overwrite</span></div>
         </section>
 
-        <footer><span>XENG</span><span>Research system · Local runtime</span></footer>
+        <footer><span>XENG</span><span>Research system · Autonomous operation</span></footer>
       </main>
     </div>
     <div class="toast" id="toast" role="status"></div>
