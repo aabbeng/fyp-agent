@@ -40,9 +40,10 @@ from application.database import (
     set_methodology_status,
 )
 from application.agents import refresh_team_states
-from application.notifications import telegram_configured
+from application.notifications import send_telegram, telegram_configured
 from application.research import ResearchSearchError, search_papers
 from application.thesis import build_evidence_outline
+from application.bibliography import import_approved_citations
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 FRONTEND_ROOT = REPOSITORY_ROOT / "frontend"
@@ -85,6 +86,11 @@ class ApprovalRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     password: str = Field(min_length=1)
+
+
+class CitationImportRequest(BaseModel):
+    text: str = Field(min_length=20, max_length=100_000)
+    approved_for_introduction: bool = False
 
 
 def local_team_status() -> dict[str, Any]:
@@ -235,6 +241,35 @@ def add_evidence(request: EvidenceRequest) -> dict[str, Any]:
 def evidence_library() -> dict[str, Any]:
     papers = list_papers()
     return {"count": len(papers), "papers": papers}
+
+
+@app.post("/api/research/import-citations")
+def import_citations(request: CitationImportRequest) -> dict[str, Any]:
+    if not request.approved_for_introduction:
+        raise HTTPException(
+            status_code=400,
+            detail="Confirm that these sources were approved for the submitted Introduction",
+        )
+    result = import_approved_citations(request.text)
+    if not result["imported"]:
+        raise HTTPException(status_code=400, detail="No valid citation entries were found")
+    log_activity(
+        "Evi-Revy",
+        "Imported approved Introduction sources",
+        f"{result['imported']} saved · {result['duplicates']} duplicates removed",
+    )
+    refresh_team_states()
+    try:
+        send_telegram(
+            "XENG evidence update\n\n"
+            f"• Evi-Revy imported {result['imported']} approved Introduction sources\n"
+            f"• Removed {result['duplicates']} duplicate(s)\n"
+            "• Planx can now use them for thesis structure\n"
+            "• Full-text checks remain required for detailed claims"
+        )
+    except Exception:
+        pass
+    return {"success": True, **result}
 
 
 @app.get("/api/thesis/sections")

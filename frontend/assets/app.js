@@ -30,6 +30,10 @@ const els = {
   runList: document.querySelector("#run-list"),
   officeGrid: document.querySelector("#office-grid"),
   agentChatFeed: document.querySelector("#agent-chat-feed"),
+  citationFile: document.querySelector("#citation-file"),
+  citationApproved: document.querySelector("#citation-approved"),
+  importCitations: document.querySelector("#import-citations"),
+  importResult: document.querySelector("#import-result"),
 };
 
 let workspaceState = null;
@@ -119,12 +123,46 @@ async function checkHealth() {
 function paperCard(paper, index, saved = false) {
   const authors = (paper.authors || []).slice(0, 3).join(", ") || "Authors unavailable";
   const action = saved ? `<span class="saved-label">Saved evidence</span>` : `<button class="button compact ghost save-paper" data-index="${index}">Add evidence</button>`;
+  const sourceTag = paper.source === "Approved Introduction" ? "INTRO APPROVED" : (paper.paper_type || "paper");
   return `<article class="paper-card">
-    <div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>${escapeHTML(paper.paper_type || "paper")}</span></div>
+    <div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>${escapeHTML(sourceTag)}</span></div>
     <h4>${escapeHTML(paper.title)}</h4>
     <p>${escapeHTML(authors)}</p>
     <div class="paper-foot"><a href="${escapeHTML(paper.url)}" target="_blank" rel="noreferrer">DOI: ${escapeHTML(paper.doi)}</a>${action}</div>
   </article>`;
+}
+
+if (els.citationFile) {
+  els.citationFile.addEventListener("change", () => {
+    const file = els.citationFile.files[0];
+    document.querySelector("#citation-file-label").textContent = file ? file.name : "Choose .txt or .md";
+  });
+}
+
+if (els.importCitations) {
+  els.importCitations.addEventListener("click", async () => {
+    const file = els.citationFile.files[0];
+    if (!file) return showToast("Choose your citations .txt or .md file first.");
+    if (!els.citationApproved.checked) return showToast("Confirm the Introduction approval status first.");
+    if (file.size > 100000) return showToast("The bibliography file must be smaller than 100 KB.");
+    els.importCitations.disabled = true;
+    els.importCitations.textContent = "Evi-Revy is checking…";
+    try {
+      const result = await api("/api/research/import-citations", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: await file.text(), approved_for_introduction: true }),
+      });
+      els.importResult.classList.remove("hidden");
+      els.importResult.innerHTML = `<strong>${result.imported} approved sources imported</strong><span>${result.duplicates} duplicate(s) removed · ${result.issues.length} correction note(s)</span>`;
+      await loadWorkspace();
+      showToast("Approved sources are now available to Planx.");
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      els.importCitations.disabled = false;
+      els.importCitations.textContent = "Import to XENG";
+    }
+  });
 }
 
 function renderWorkspace() {

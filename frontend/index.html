@@ -154,6 +154,13 @@
           </div>
           <div class="research-grid">
             <div class="workspace-card">
+              <div class="citation-importer">
+                <div class="import-copy"><span class="agent-avatar">E</span><div><strong>Import approved research</strong><small>Send a .txt or .md bibliography through Evi-Revy to Planx.</small></div></div>
+                <label class="file-drop" for="citation-file"><input id="citation-file" type="file" accept=".txt,.md,text/plain,text/markdown" /><span id="citation-file-label">Choose .txt or .md</span></label>
+                <label class="approval-check import-confirm"><input id="citation-approved" type="checkbox" /><span>Approved for my submitted Introduction</span></label>
+                <button class="button primary" id="import-citations" type="button">Import to XENG</button>
+                <div class="import-result hidden" id="import-result"></div>
+              </div>
               <form class="search-bar" id="research-form">
                 <input id="research-query" value="LLM agent tool selection multi-step execution" aria-label="Paper search query" />
                 <button class="button primary" type="submit">Search papers</button>
