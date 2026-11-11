@@ -70,7 +70,7 @@ function setPlanxState(mode, message, returnToIdle = false) {
   const labels = { idle: "Coffee break", writing: "Writing", filing: "Filing draft", done: "Ready for review", error: "Needs attention" };
   els.planxStatus.textContent = labels[mode];
   els.planxBubble.textContent = message || planxMessages[mode][0];
-  els.aiStatus.textContent = `${labels[mode]} · click Planx to talk`;
+  if (els.aiStatus) els.aiStatus.textContent = `${labels[mode]} · click Planx to talk`;
   if (returnToIdle) planxTimer = window.setTimeout(() => setPlanxState("idle"), 5200);
 }
 
@@ -253,7 +253,7 @@ function renderWorkspace() {
   const runButton = els.form.querySelector('button[type="submit"]');
   runButton.disabled = !approved;
   runButton.title = approved ? "" : "Approve the methodology first";
-  if (planxMode === "idle") els.aiStatus.textContent = "Coffee break · click Planx to talk";
+  if (planxMode === "idle" && els.aiStatus) els.aiStatus.textContent = "Coffee break · click Planx to talk";
   const section = state.sections.find((item) => item.section_key === activeSection);
   if (section) {
     els.sectionTitle.textContent = section.title;
