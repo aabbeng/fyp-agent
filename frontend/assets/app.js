@@ -43,6 +43,7 @@ const els = {
   planxSourceList: document.querySelector("#planx-source-list"),
   studioWordCount: document.querySelector("#studio-word-count"),
   clearAllSources: document.querySelector("#clear-all-sources"),
+  selectAllSources: document.querySelector("#select-all-sources"),
   planxSourceSearch: document.querySelector("#planx-source-search"),
   planxSearchResults: document.querySelector("#planx-search-results"),
   operationEvidenceCount: document.querySelector("#operation-evidence-count"),
@@ -183,6 +184,8 @@ function renderPlanxSources(papers) {
   const available = new Set(papers.map((paper) => paper.doi));
   selectedPlanxDois = new Set([...selectedPlanxDois].filter((doi) => available.has(doi)));
   els.planxSourceCount.textContent = `${selectedPlanxDois.size} selected`;
+  els.selectAllSources.disabled = !papers.length || selectedPlanxDois.size === papers.length;
+  els.clearAllSources.disabled = selectedPlanxDois.size === 0;
   const selected = papers.filter((paper) => selectedPlanxDois.has(paper.doi));
   els.planxSourceList.innerHTML = selected.length ? selected.map((paper) => {
     const lead = (paper.authors || ["Unknown"])[0].split(" ").slice(-1)[0];
@@ -549,6 +552,13 @@ els.clearAllSources.addEventListener("click", () => {
   selectedPlanxDois.clear();
   savePlanxSelection();
   setPlanxState("idle", "Evidence shelf cleared. Choose only the papers you want me to use.");
+});
+
+els.selectAllSources.addEventListener("click", () => {
+  selectedPlanxDois = new Set((workspaceState?.papers || []).map((paper) => paper.doi));
+  savePlanxSelection();
+  setPlanxState("idle", `${selectedPlanxDois.size} approved sources selected for my next draft.`);
+  showToast(`${selectedPlanxDois.size} sources selected for Planx.`);
 });
 
 document.querySelector("#approve-method").addEventListener("click", async () => {
