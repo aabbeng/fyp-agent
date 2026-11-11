@@ -18,7 +18,7 @@ from application.api import (
     update_thesis_section,
     workspace,
 )
-from application.research import normalize_crossref_item
+from application.research import meets_thesis_source_rules, normalize_crossref_item
 from application.thesis import build_evidence_outline
 
 
@@ -62,6 +62,18 @@ class ResearchWorkflowTests(unittest.TestCase):
         self.assertEqual(paper["title"], "Agent tools")
         self.assertEqual(paper["authors"], ["Ada Lovelace"])
         self.assertEqual(paper["year"], 2025)
+
+    def test_thesis_source_rule_requires_recent_open_scholarly_work(self) -> None:
+        eligible = {
+            **SAMPLE_PAPER,
+            "paper_type": "journal-article",
+            "is_open_access": True,
+            "open_access_url": "https://repository.example/paper.pdf",
+        }
+        self.assertTrue(meets_thesis_source_rules(eligible))
+        self.assertFalse(meets_thesis_source_rules({**eligible, "year": 2021}))
+        self.assertFalse(meets_thesis_source_rules({**eligible, "is_open_access": False}))
+        self.assertFalse(meets_thesis_source_rules({**eligible, "paper_type": "dataset"}))
 
     def test_saves_verified_evidence_without_duplicates(self) -> None:
         request = EvidenceRequest(paper=SAMPLE_PAPER, relevance="Supports evaluation metrics")

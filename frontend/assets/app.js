@@ -335,7 +335,7 @@ function renderWorkspace() {
   els.candidateCount.textContent = candidates.length;
   els.candidateList.innerHTML = candidates.length ? candidates.map((candidate) => {
     const paper = candidate.paper;
-    return `<article class="paper-card"><div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>Pending</span></div><h4>${escapeHTML(paper.title)}</h4><p>${escapeHTML(candidate.query)}</p><div class="paper-foot"><a href="${escapeHTML(paper.url)}" target="_blank" rel="noreferrer">${escapeHTML(paper.doi)}</a><button class="button compact ghost approve-candidate" data-doi="${escapeHTML(paper.doi)}">Approve</button></div></article>`;
+    return `<article class="paper-card"><div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>Open access</span></div><h4>${escapeHTML(paper.title)}</h4><p>${escapeHTML(candidate.query)}</p><div class="paper-foot"><a href="${escapeHTML(paper.open_access_url || paper.url)}" target="_blank" rel="noreferrer">Read source</a><div class="candidate-actions"><button class="button compact danger reject-candidate" data-id="${candidate.id}">Reject</button><button class="button compact ghost approve-candidate" data-doi="${escapeHTML(paper.doi)}">Approve</button></div></div></article>`;
   }).join("") : '<div class="soft-empty">The next operation will add papers here.</div>';
   const runs = state.job_runs || [];
   els.runList.innerHTML = runs.length ? runs.map((run) => `<div class="run-item"><strong>${escapeHTML(run.job_name)} · ${escapeHTML(run.status)}</strong><small>${escapeHTML(run.started_at)}</small></div>`).join("") : '<div class="soft-empty">No autonomous runs yet.</div>';
@@ -378,12 +378,17 @@ updateOfficeClock();
 window.setInterval(updateOfficeClock, 30000);
 
 els.candidateList.addEventListener("click", async (event) => {
-  const button = event.target.closest(".approve-candidate");
+  const button = event.target.closest(".approve-candidate, .reject-candidate");
   if (!button) return;
   button.disabled = true;
   try {
-    await api(`/api/research/candidates/${encodeURIComponent(button.dataset.doi)}/approve`, { method: "POST" });
-    await loadWorkspace(); showToast("Paper approved and added to evidence.");
+    if (button.classList.contains("reject-candidate")) {
+      await api(`/api/research/candidates/${button.dataset.id}/reject`, { method: "POST" });
+      await loadWorkspace(); showToast("Paper rejected and removed from review.");
+    } else {
+      await api(`/api/research/candidates/${encodeURIComponent(button.dataset.doi)}/approve`, { method: "POST" });
+      await loadWorkspace(); showToast("Paper approved and added to evidence.");
+    }
   } catch (error) { button.disabled = false; showToast(error.message); }
 });
 
@@ -431,7 +436,7 @@ document.querySelector("#research-form").addEventListener("submit", async (event
     searchResults = data.papers;
     els.researchResults.innerHTML = searchResults.length
       ? searchResults.map((paper, index) => paperCard(paper, index)).join("")
-      : '<div class="soft-empty">No matching DOI records found. Try a wider query.</div>';
+      : '<div class="soft-empty">No qualifying open-access scholarly sources from 2022–2026 were found. Try a wider query.</div>';
   } catch (error) {
     els.researchResults.innerHTML = `<div class="soft-empty error-text">${escapeHTML(error.message)}</div>`;
   } finally {

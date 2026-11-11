@@ -9,10 +9,14 @@ from application.database import (
     send_agent_message,
     update_agent_state,
 )
+from application.research import meets_thesis_source_rules
 
 
 def _review_summary() -> tuple[int, int]:
-    candidates = list_candidates("pending", 1000)
+    candidates = [
+        item for item in list_candidates("pending", 1000)
+        if meets_thesis_source_rules(item["paper"])
+    ]
     reviewable = sum(
         1 for item in candidates
         if item["paper"].get("title") and item["paper"].get("doi")

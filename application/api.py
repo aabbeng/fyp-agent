@@ -51,7 +51,7 @@ from application.notifications import (
     send_paper_review,
     telegram_configured,
 )
-from application.research import ResearchSearchError, search_papers
+from application.research import ResearchSearchError, meets_thesis_source_rules, search_papers
 from application.thesis import build_evidence_outline
 from application.bibliography import import_approved_citations
 
@@ -204,7 +204,10 @@ def workspace() -> dict[str, Any]:
         "activities": list_activities(12),
         "agents": list_agent_states(),
         "agent_messages": list_agent_messages(18),
-        "research_candidates": list_candidates("pending", 50),
+        "research_candidates": [
+            item for item in list_candidates("pending", 1000)
+            if meets_thesis_source_rules(item["paper"])
+        ][:50],
         "job_runs": list_job_runs(12),
         "operation": {
             "database": backend_name(),
@@ -216,7 +219,10 @@ def workspace() -> dict[str, Any]:
 
 @app.get("/api/research/candidates")
 def research_candidates() -> dict[str, Any]:
-    candidates = list_candidates("pending", 100)
+    candidates = [
+        item for item in list_candidates("pending", 1000)
+        if meets_thesis_source_rules(item["paper"])
+    ][:100]
     return {"count": len(candidates), "candidates": candidates}
 
 
@@ -248,7 +254,11 @@ def setup_telegram(request: Request) -> dict[str, Any]:
 @app.post("/api/telegram/sync-papers")
 def sync_papers_to_telegram(limit: int = Query(default=5, ge=1, le=10)) -> dict[str, Any]:
     sent = 0
-    for candidate in list_candidates("pending", limit):
+    candidates = [
+        item for item in list_candidates("pending", 1000)
+        if meets_thesis_source_rules(item["paper"])
+    ][:limit]
+    for candidate in candidates:
         sent += int(send_paper_review(candidate))
     return {"success": True, "sent": sent}
 
@@ -320,6 +330,17 @@ def approve_research_candidate(doi: str) -> dict[str, Any]:
     log_activity("Evi-Revy", "Candidate approved", paper["title"])
     refresh_team_states()
     return {"success": True, "paper": paper}
+
+
+@app.post("/api/research/candidates/{candidate_id}/reject")
+def reject_research_candidate(candidate_id: int) -> dict[str, Any]:
+    try:
+        candidate = decide_candidate(candidate_id, "rejected")
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    log_activity("Evi-Revy", "Candidate rejected", candidate["paper"]["title"])
+    refresh_team_states()
+    return {"success": True, "candidate": candidate}
 
 
 @app.get("/api/research/search")

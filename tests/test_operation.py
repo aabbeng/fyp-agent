@@ -55,6 +55,11 @@ class OperationTests(unittest.TestCase):
         self.assertEqual(result["status"], "rejected")
         self.assertEqual(database.list_papers(), [])
 
+    def test_rejected_candidate_is_removed_from_human_checkpoint(self) -> None:
+        candidate, _ = database.save_candidate(PAPER, "agent tools")
+        database.decide_candidate(candidate["id"], "rejected")
+        self.assertEqual(database.list_candidates("pending"), [])
+
     def test_six_named_agents_are_initialized(self) -> None:
         agents = database.list_agent_states()
         self.assertEqual(

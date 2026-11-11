@@ -21,9 +21,9 @@ SECTION_TITLES = {
 }
 
 AGENT_SEEDS = (
-    ("scoot", "Scoot", "Research Scout", "Finds recent and relevant academic papers."),
-    ("evi-revy", "Evi-Revy", "Evidence Reviewer", "Checks paper relevance, quality, and research value."),
-    ("planx", "Planx", "Thesis Planner", "Maps approved evidence into the thesis structure."),
+    ("scoot", "Scoot", "Research Scout", "Finds open-access scholarly sources published from 2022 to 2026."),
+    ("evi-revy", "Evi-Revy", "Evidence Reviewer", "Rejects inaccessible, non-scholarly, or out-of-range sources."),
+    ("planx", "Planx", "Thesis Planner", "Uses only Beng-approved evidence that meets the 2022–2026 open-access rule."),
     ("xengineer", "Xengineer", "Prototype Engineer", "Turns the approved methodology into build tasks."),
     ("teehee", "TeeHee", "Test & Evaluation Agent", "Tests the prototype and records its results."),
     ("cordy", "Cordy", "Project Coordinator", "Controls handoffs, approvals, and team updates."),
