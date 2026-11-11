@@ -185,9 +185,10 @@ function renderPlanxSources(papers) {
   }).join("") : '<div class="soft-empty">Import or approve papers to give Planx evidence.</div>';
 }
 
-function savePlanxSelection() {
+function savePlanxSelection(rerender = true) {
   window.localStorage.setItem("xeng-planx-sources", JSON.stringify([...selectedPlanxDois]));
-  renderPlanxSources(workspaceState?.papers || []);
+  if (rerender) renderPlanxSources(workspaceState?.papers || []);
+  else els.planxSourceCount.textContent = `${selectedPlanxDois.size}/${workspaceState?.papers?.length || 0}`;
 }
 
 function updateWordCount() {
@@ -437,7 +438,8 @@ els.planxSourceList.addEventListener("change", (event) => {
   if (!checkbox) return;
   if (checkbox.checked) selectedPlanxDois.add(checkbox.dataset.doi);
   else selectedPlanxDois.delete(checkbox.dataset.doi);
-  savePlanxSelection();
+  checkbox.closest(".planx-source").classList.toggle("selected", checkbox.checked);
+  savePlanxSelection(false);
   setPlanxState("idle", `${selectedPlanxDois.size} source${selectedPlanxDois.size === 1 ? "" : "s"} selected for my next draft.`);
 });
 
