@@ -199,18 +199,18 @@
                 <div class="planx-selected-list" id="planx-source-list"><div class="soft-empty">No papers selected. Search above to add evidence.</div></div>
               </div>
             </div>
-            <aside class="workspace-card planx-office state-idle" id="planx-office">
-              <div class="planx-office-head"><div><span class="eyebrow">Planx · private office</span><h3>Thesis planner at work</h3></div><span class="planx-live"><i></i><b id="planx-status">Coffee break</b></span></div>
-              <div class="planx-room">
-                <div class="planx-window"><i></i><i></i><span></span></div>
-                <div class="planx-shelf"><i></i><i></i><i></i><i></i></div>
-                <div class="planx-bubble" id="planx-bubble">Send me approved evidence when you're ready.</div>
-                <button class="planx-character" id="planx-character" type="button" aria-label="Talk to Planx">
-                  <i class="px-hair-back"></i><i class="px-head"></i><i class="px-hair"></i><i class="px-headset"></i><i class="px-glasses left"></i><i class="px-glasses right"></i><i class="px-body"></i><i class="px-collar"></i><i class="px-arm left"></i><i class="px-arm right"></i>
-                </button>
-                <div class="planx-desk"><i class="px-monitor"></i><i class="px-screen-line one"></i><i class="px-screen-line two"></i><i class="px-keyboard"></i><i class="px-paper"></i><i class="px-cup"></i><i class="px-steam one"></i><i class="px-steam two"></i></div>
-                <div class="planx-rug"></div>
+            <aside class="workspace-card evidence-room state-idle" id="thesis-library">
+              <div class="evidence-room-head"><div><span class="eyebrow">Thesis evidence library</span><h3>Your approved sources</h3></div><span class="planx-live"><i></i><b id="planx-status">Library ready</b></span></div>
+              <p class="library-note" id="planx-bubble">Hover over a book to inspect it. Click a book to add or remove it from Planx’s next draft.</p>
+              <div class="bookcase" id="evidence-bookcase" aria-label="Interactive bookshelf of approved research">
+                <div class="bookcase-empty">Your approved papers will appear here as books.</div>
               </div>
+              <article class="book-preview" id="book-preview" aria-live="polite">
+                <span class="eyebrow">Selected book</span>
+                <h4>Move across the shelf</h4>
+                <p class="book-preview-meta">Title, author and year will appear here.</p>
+                <p class="book-preview-abstract">If an abstract is available, you can read it here.</p>
+              </article>
             </aside>
           </div>
         </section>

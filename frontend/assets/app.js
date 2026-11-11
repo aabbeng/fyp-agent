@@ -33,10 +33,12 @@ const els = {
   citationApproved: document.querySelector("#citation-approved"),
   importCitations: document.querySelector("#import-citations"),
   importResult: document.querySelector("#import-result"),
-  planxOffice: document.querySelector("#planx-office"),
+  planxOffice: document.querySelector("#thesis-library"),
   planxStatus: document.querySelector("#planx-status"),
   planxBubble: document.querySelector("#planx-bubble"),
   planxCharacter: document.querySelector("#planx-character"),
+  evidenceBookcase: document.querySelector("#evidence-bookcase"),
+  bookPreview: document.querySelector("#book-preview"),
   planxSourceCount: document.querySelector("#planx-source-count"),
   planxSourceList: document.querySelector("#planx-source-list"),
   studioWordCount: document.querySelector("#studio-word-count"),
@@ -71,10 +73,10 @@ function setPlanxState(mode, message, returnToIdle = false) {
   window.clearTimeout(planxTimer);
   els.planxOffice.classList.remove("state-idle", "state-writing", "state-filing", "state-done", "state-error");
   els.planxOffice.classList.add(`state-${mode}`);
-  const labels = { idle: "Coffee break", writing: "Writing", filing: "Filing draft", done: "Ready for review", error: "Needs attention" };
+  const labels = { idle: "Library ready", writing: "Planx is writing", filing: "Saving draft", done: "Ready for review", error: "Needs attention" };
   els.planxStatus.textContent = labels[mode];
   els.planxBubble.textContent = message || planxMessages[mode][0];
-  if (els.aiStatus) els.aiStatus.textContent = `${labels[mode]} · click Planx to talk`;
+  if (els.aiStatus) els.aiStatus.textContent = labels[mode];
   if (returnToIdle) planxTimer = window.setTimeout(() => setPlanxState("idle"), 5200);
 }
 
@@ -190,6 +192,43 @@ function renderPlanxSources(papers) {
   renderPlanxSearchResults(papers);
 }
 
+function showBookPreview(paper) {
+  if (!els.bookPreview || !paper) return;
+  const authors = (paper.authors || ["Unknown author"]).join(", ");
+  const abstract = paper.abstract?.trim() || "No abstract is stored yet. Use this source for citation details only until its claims are checked from the full paper.";
+  els.bookPreview.innerHTML = `
+    <span class="eyebrow">${selectedPlanxDois.has(paper.doi) ? "Selected for Planx" : "Approved source"}</span>
+    <h4>${escapeHTML(paper.title)}</h4>
+    <p class="book-preview-meta">${escapeHTML(authors)} · ${escapeHTML(paper.year || "n.d.")}</p>
+    <p class="book-preview-abstract">${escapeHTML(abstract)}</p>`;
+}
+
+function renderEvidenceBooks(papers) {
+  if (!els.evidenceBookcase) return;
+  if (!papers.length) {
+    els.evidenceBookcase.innerHTML = '<div class="bookcase-empty">Your approved papers will appear here as books.</div>';
+    return;
+  }
+  const colours = ["aqua", "violet", "mint", "coral", "gold", "blue"];
+  els.evidenceBookcase.innerHTML = `<div class="book-row">${papers.map((paper, index) => `
+    <button class="evidence-book ${colours[index % colours.length]} ${selectedPlanxDois.has(paper.doi) ? "selected" : ""}" type="button" data-book-index="${index}" aria-label="${escapeHTML(paper.title)}">
+      <span>${escapeHTML(String(paper.title || "Untitled").slice(0, 48))}</span>
+    </button>`).join("")}</div><div class="shelf-board"></div>`;
+  els.evidenceBookcase.querySelectorAll(".evidence-book").forEach((book) => {
+    const preview = () => showBookPreview(papers[Number(book.dataset.bookIndex)]);
+    book.addEventListener("mouseenter", preview);
+    book.addEventListener("focus", preview);
+    book.addEventListener("click", () => {
+      const paper = papers[Number(book.dataset.bookIndex)];
+      if (selectedPlanxDois.has(paper.doi)) selectedPlanxDois.delete(paper.doi);
+      else selectedPlanxDois.add(paper.doi);
+      savePlanxSelection();
+      showBookPreview(paper);
+    });
+  });
+  showBookPreview(papers[0]);
+}
+
 function renderPlanxSearchResults(papers = workspaceState?.papers || []) {
   const query = (els.planxSourceSearch?.value || "").trim().toLowerCase();
   if (!query) return els.planxSearchResults.classList.add("hidden");
@@ -212,7 +251,10 @@ function renderOperationEvidence(papers) {
 
 function savePlanxSelection(rerender = true) {
   window.localStorage.setItem("xeng-planx-sources", JSON.stringify([...selectedPlanxDois]));
-  if (rerender) renderPlanxSources(workspaceState?.papers || []);
+  if (rerender) {
+    renderPlanxSources(workspaceState?.papers || []);
+    renderEvidenceBooks(workspaceState?.papers || []);
+  }
   else els.planxSourceCount.textContent = `${selectedPlanxDois.size} selected`;
 }
 
@@ -279,7 +321,7 @@ function renderWorkspace() {
   const runButton = els.form.querySelector('button[type="submit"]');
   runButton.disabled = !approved;
   runButton.title = approved ? "" : "Approve the methodology first";
-  if (planxMode === "idle" && els.aiStatus) els.aiStatus.textContent = "Coffee break · click Planx to talk";
+  if (planxMode === "idle" && els.aiStatus) els.aiStatus.textContent = "Library ready";
   const section = state.sections.find((item) => item.section_key === activeSection);
   if (section) {
     els.sectionTitle.textContent = section.title;
@@ -287,6 +329,7 @@ function renderWorkspace() {
     updateWordCount();
   }
   renderPlanxSources(state.papers || []);
+  renderEvidenceBooks(state.papers || []);
   renderOperationEvidence(state.papers || []);
   const candidates = state.research_candidates || [];
   els.candidateCount.textContent = candidates.length;
