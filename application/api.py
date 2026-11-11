@@ -77,6 +77,7 @@ class SectionRequest(BaseModel):
 class DraftRequest(BaseModel):
     section_key: str
     focus: str = ""
+    evidence_dois: list[str] | None = None
 
 
 class ApprovalRequest(BaseModel):
@@ -295,11 +296,18 @@ def draft_thesis_section(request: DraftRequest) -> dict[str, Any]:
     if not section:
         raise HTTPException(status_code=404, detail="Unknown thesis section")
     papers = list_papers()
+    if request.evidence_dois is not None:
+        selected = {doi.strip().lower() for doi in request.evidence_dois if doi.strip()}
+        if not selected:
+            raise HTTPException(status_code=400, detail="Select at least one approved source for Planx")
+        papers = [paper for paper in papers if paper["doi"].strip().lower() in selected]
+        if not papers:
+            raise HTTPException(status_code=400, detail="None of the selected sources are available")
     content = build_evidence_outline(request.section_key, papers)
     mode = "local_outline"
     saved = save_section(request.section_key, content)
-    log_activity("Planx", "Prepared draft", f"{saved['title']} — {mode}")
-    return {"success": True, "mode": mode, "section": saved}
+    log_activity("Planx", "Prepared draft", f"{saved['title']} — {len(papers)} selected sources")
+    return {"success": True, "mode": mode, "section": saved, "source_count": len(papers)}
 
 
 @app.post("/api/methodology/approve")

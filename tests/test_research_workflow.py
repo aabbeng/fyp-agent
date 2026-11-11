@@ -94,6 +94,31 @@ class ResearchWorkflowTests(unittest.TestCase):
         self.assertEqual(result["mode"], "local_outline")
         self.assertIn("predictions rather than research findings", result["section"]["content"])
 
+    def test_planx_uses_only_human_selected_sources(self) -> None:
+        second = {
+            **SAMPLE_PAPER,
+            "doi": "10.1000/fyp.2025.2",
+            "title": "Function Calling Evaluation",
+            "authors": ["Noah Tan"],
+            "year": 2025,
+        }
+        add_evidence(EvidenceRequest(paper=SAMPLE_PAPER))
+        add_evidence(EvidenceRequest(paper=second))
+
+        result = draft_thesis_section(DraftRequest(
+            section_key="literature_review",
+            evidence_dois=[second["doi"]],
+        ))
+
+        self.assertEqual(result["source_count"], 1)
+        self.assertIn("(Tan, 2025)", result["section"]["content"])
+        self.assertNotIn("Rahman", result["section"]["content"])
+
+    def test_planx_rejects_empty_human_selection(self) -> None:
+        add_evidence(EvidenceRequest(paper=SAMPLE_PAPER))
+        with self.assertRaises(HTTPException):
+            draft_thesis_section(DraftRequest(section_key="literature_review", evidence_dois=[]))
+
     def test_methodology_requires_evidence_and_substantial_draft(self) -> None:
         with self.assertRaises(HTTPException):
             approve_methodology(ApprovalRequest(confirmed=True))

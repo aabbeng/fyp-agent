@@ -41,6 +41,8 @@ const els = {
   planxSourceCount: document.querySelector("#planx-source-count"),
   planxSourceList: document.querySelector("#planx-source-list"),
   studioWordCount: document.querySelector("#studio-word-count"),
+  selectAllSources: document.querySelector("#select-all-sources"),
+  clearAllSources: document.querySelector("#clear-all-sources"),
 };
 
 let workspaceState = null;
@@ -48,6 +50,8 @@ let searchResults = [];
 let activeSection = "literature_review";
 let planxMode = "idle";
 let planxTimer = null;
+let selectedPlanxDois = new Set();
+let planxSelectionLoaded = false;
 
 const planxMessages = {
   idle: ["Coffee ready. Send me approved evidence when you are.", "I’m reviewing the structure in my head.", "Click Build evidence outline when you want me to start."],
@@ -164,13 +168,26 @@ function paperCard(paper, index, saved = false) {
 
 function renderPlanxSources(papers) {
   if (!els.planxSourceList) return;
-  els.planxSourceCount.textContent = papers.length;
+  if (!planxSelectionLoaded) {
+    const stored = window.localStorage.getItem("xeng-planx-sources");
+    try { selectedPlanxDois = new Set(stored === null ? papers.map((paper) => paper.doi) : JSON.parse(stored)); }
+    catch { selectedPlanxDois = new Set(papers.map((paper) => paper.doi)); }
+    planxSelectionLoaded = true;
+  }
+  const available = new Set(papers.map((paper) => paper.doi));
+  selectedPlanxDois = new Set([...selectedPlanxDois].filter((doi) => available.has(doi)));
+  els.planxSourceCount.textContent = `${selectedPlanxDois.size}/${papers.length}`;
   els.planxSourceList.innerHTML = papers.length ? papers.map((paper) => {
     const lead = (paper.authors || ["Unknown"])[0].split(" ").slice(-1)[0];
     const citation = `${lead}${(paper.authors || []).length > 1 ? " et al." : ""}, ${paper.year || "n.d."}`;
     const readiness = paper.abstract ? "Claim-ready" : "Citation approved";
-    return `<article class="planx-source"><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML(citation)} · ${escapeHTML(paper.source || "Evidence library")}</small></div><span class="source-readiness ${paper.abstract ? "ready" : "citation"}">${readiness}</span></article>`;
+    return `<label class="planx-source ${selectedPlanxDois.has(paper.doi) ? "selected" : ""}"><input class="planx-source-check" type="checkbox" data-doi="${escapeHTML(paper.doi)}" ${selectedPlanxDois.has(paper.doi) ? "checked" : ""} /><span class="source-checkmark">✓</span><div><strong>${escapeHTML(paper.title)}</strong><small>${escapeHTML(citation)} · ${escapeHTML(paper.source || "Evidence library")}</small></div><span class="source-readiness ${paper.abstract ? "ready" : "citation"}">${readiness}</span></label>`;
   }).join("") : '<div class="soft-empty">Import or approve papers to give Planx evidence.</div>';
+}
+
+function savePlanxSelection() {
+  window.localStorage.setItem("xeng-planx-sources", JSON.stringify([...selectedPlanxDois]));
+  renderPlanxSources(workspaceState?.papers || []);
 }
 
 function updateWordCount() {
@@ -383,12 +400,17 @@ document.querySelector("#save-section").addEventListener("click", async () => {
 async function draftSection() {
   const button = document.querySelector("#build-outline");
   button.disabled = true; button.textContent = "Building…";
+  if (!selectedPlanxDois.size) {
+    button.disabled = false; button.textContent = "Ask Planx to write";
+    setPlanxState("error", "Choose at least one source from my evidence shelf first.", true);
+    return showToast("Select at least one source for Planx.");
+  }
   setPlanxState("writing");
   try {
     await saveSection(false);
     const result = await api("/api/thesis/draft", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section_key: activeSection }),
+      body: JSON.stringify({ section_key: activeSection, evidence_dois: [...selectedPlanxDois] }),
     });
     await loadWorkspace();
     setPlanxState("done", "Academic draft ready. Please review the wording and citations before saving it.", true);
@@ -409,6 +431,27 @@ if (els.planxCharacter) {
 }
 
 els.sectionContent.addEventListener("input", updateWordCount);
+
+els.planxSourceList.addEventListener("change", (event) => {
+  const checkbox = event.target.closest(".planx-source-check");
+  if (!checkbox) return;
+  if (checkbox.checked) selectedPlanxDois.add(checkbox.dataset.doi);
+  else selectedPlanxDois.delete(checkbox.dataset.doi);
+  savePlanxSelection();
+  setPlanxState("idle", `${selectedPlanxDois.size} source${selectedPlanxDois.size === 1 ? "" : "s"} selected for my next draft.`);
+});
+
+els.selectAllSources.addEventListener("click", () => {
+  selectedPlanxDois = new Set((workspaceState?.papers || []).map((paper) => paper.doi));
+  savePlanxSelection();
+  setPlanxState("idle", "All approved sources selected. I’ll still keep claim-level checks visible.");
+});
+
+els.clearAllSources.addEventListener("click", () => {
+  selectedPlanxDois.clear();
+  savePlanxSelection();
+  setPlanxState("idle", "Evidence shelf cleared. Choose only the papers you want me to use.");
+});
 
 document.querySelector("#approve-method").addEventListener("click", async () => {
   try {
