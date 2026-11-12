@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -77,6 +78,13 @@ class OperationTests(unittest.TestCase):
         self.assertIn("custom image research", topics)
         self.assertTrue(any("digital asset management" in topic for topic in topics))
         self.assertTrue(any("privacy" in topic for topic in topics))
+
+    @patch.dict(os.environ, {"XENG_RESEARCH_TOPICS": ""})
+    def test_related_keywords_rotate_each_day(self) -> None:
+        first_day = research_topics(date(2026, 11, 12))
+        next_day = research_topics(date(2026, 11, 13))
+        self.assertNotEqual(first_day, next_day)
+        self.assertIn("LLM agent tool selection multi-step execution", first_day)
 
     @patch("application.automation.send_team_update", return_value=True)
     @patch("application.automation.search_papers", return_value=[PAPER])

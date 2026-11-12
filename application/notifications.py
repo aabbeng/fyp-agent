@@ -75,9 +75,10 @@ def send_paper_review(candidate: dict[str, Any]) -> bool:
     text = format_agent_update(
         "Evi-Revy",
         "Paper review",
-        f'I found a paper for review.\n\n"{paper["title"]}"\n'
+        f'I found a {paper.get("source_kind", "scholarly")} source for review.\n\n"{paper["title"]}"\n'
         f'{authors} ({paper.get("year") or "n.d."})\n'
-        f'DOI: {paper["doi"]}\n{paper.get("url") or ""}',
+        f'Source: {paper.get("source", "Unknown")} · {paper.get("credibility", "scholarly record")}\n'
+        f'ID: {paper["doi"]}\n{paper.get("url") or ""}',
         "Approve it for Planx or reject it below.",
     )
     keyboard = {"inline_keyboard": [[

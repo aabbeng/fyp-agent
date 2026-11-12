@@ -18,7 +18,11 @@ from application.api import (
     update_thesis_section,
     workspace,
 )
-from application.research import meets_thesis_source_rules, normalize_crossref_item
+from application.research import (
+    meets_thesis_source_rules,
+    normalize_crossref_item,
+    normalize_openalex_item,
+)
 from application.thesis import build_evidence_outline
 
 
@@ -74,6 +78,34 @@ class ResearchWorkflowTests(unittest.TestCase):
         self.assertFalse(meets_thesis_source_rules({**eligible, "year": 2021}))
         self.assertFalse(meets_thesis_source_rules({**eligible, "is_open_access": False}))
         self.assertFalse(meets_thesis_source_rules({**eligible, "paper_type": "dataset"}))
+
+        web_source = {
+            **eligible,
+            "doi": "web:example",
+            "paper_type": "web-article",
+            "source_kind": "web",
+            "is_open_access": False,
+        }
+        self.assertTrue(meets_thesis_source_rules(web_source))
+
+    def test_normalizes_openalex_open_access_paper(self) -> None:
+        paper = normalize_openalex_item({
+            "id": "https://openalex.org/W123",
+            "doi": "https://doi.org/10.1000/open.1",
+            "title": "Local AI Agents for Image Management",
+            "publication_year": 2025,
+            "type": "article",
+            "authorships": [{"author": {"display_name": "Ada Lee"}}],
+            "open_access": {"is_oa": True},
+            "best_oa_location": {
+                "pdf_url": "https://repository.example/open.pdf",
+                "source": {"display_name": "Open AI Journal"},
+            },
+            "abstract_inverted_index": {"Local": [0], "agents": [1], "work": [2]},
+        })
+        self.assertEqual(paper["doi"], "10.1000/open.1")
+        self.assertEqual(paper["abstract"], "Local agents work")
+        self.assertTrue(meets_thesis_source_rules(paper))
 
     def test_saves_verified_evidence_without_duplicates(self) -> None:
         request = EvidenceRequest(paper=SAMPLE_PAPER, relevance="Supports evaluation metrics")

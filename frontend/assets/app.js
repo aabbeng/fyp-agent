@@ -338,8 +338,9 @@ function renderWorkspace() {
   els.candidateCount.textContent = candidates.length;
   els.candidateList.innerHTML = candidates.length ? candidates.map((candidate) => {
     const paper = candidate.paper;
-    return `<article class="paper-card"><div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>Open access</span></div><h4>${escapeHTML(paper.title)}</h4><p>${escapeHTML(candidate.query)}</p><div class="paper-foot"><a href="${escapeHTML(paper.open_access_url || paper.url)}" target="_blank" rel="noreferrer">Read source</a><div class="candidate-actions"><button class="button compact danger reject-candidate" data-id="${candidate.id}">Reject</button><button class="button compact ghost approve-candidate" data-doi="${escapeHTML(paper.doi)}">Approve</button></div></div></article>`;
-  }).join("") : '<div class="soft-empty">The next operation will add papers here.</div>';
+    const sourceType = paper.source_kind === "web" ? (paper.credibility || "Web source") : "Scholarly · open access";
+    return `<article class="paper-card"><div class="paper-meta"><span>${escapeHTML(paper.year || "n.d.")}</span><span>${escapeHTML(sourceType)}</span></div><h4>${escapeHTML(paper.title)}</h4><p>${escapeHTML(candidate.query)}</p><div class="paper-foot"><a href="${escapeHTML(paper.open_access_url || paper.url)}" target="_blank" rel="noreferrer">Read source</a><div class="candidate-actions"><button class="button compact danger reject-candidate" data-id="${candidate.id}">Reject</button><button class="button compact ghost approve-candidate" data-doi="${escapeHTML(paper.doi)}">Approve</button></div></div></article>`;
+  }).join("") : '<div class="soft-empty">Scoot’s next crawl will add sources here.</div>';
   const runs = state.job_runs || [];
   els.runList.innerHTML = runs.length ? runs.map((run) => `<div class="run-item"><strong>${escapeHTML(run.job_name)} · ${escapeHTML(run.status)}</strong><small>${escapeHTML(run.started_at)}</small></div>`).join("") : '<div class="soft-empty">No autonomous runs yet.</div>';
   document.querySelector("#operation-database").textContent = state.operation.database === "postgresql" ? "Supabase connected" : "Local SQLite";
