@@ -146,13 +146,13 @@ def dashboard() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
+    # Render calls this while routing a cold-started free service. Keep it free of
+    # database/network work so a sleeping Supabase project cannot block startup.
     return {
         "status": "ready",
         "service": "XENG operation",
         "allowed_tools": len(ALLOWED_TOOLS),
         "safety": "gallery-bound",
-        "agents": local_team_status(),
-        "methodology": methodology_status()["status"],
         "database": backend_name(),
         "login_required": auth_required(),
         "telegram_configured": telegram_configured(),
