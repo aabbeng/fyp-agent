@@ -471,7 +471,7 @@ document.querySelector("#section-tabs").addEventListener("click", (event) => {
   activeSection = button.dataset.section;
   document.querySelectorAll("#section-tabs button").forEach((item) => item.classList.toggle("active", item === button));
   renderWorkspace();
-  const labels = { literature_review: "literature review", methodology: "methodology", expected_results: "expected results" };
+  const labels = { literature_review: "Chapter 2 literature review", methodology: "Chapter 3 methodology", expected_results: "Chapter 4 expected results" };
   setPlanxState("idle", `Opened ${labels[activeSection]}. I’m ready when you are.`);
 });
 

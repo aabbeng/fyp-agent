@@ -15,15 +15,15 @@ DB_PATH = Path(os.getenv("FYP_AGENT_DB", REPOSITORY_ROOT / "runtime" / "fyp-agen
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
 SECTION_TITLES = {
-    "literature_review": "Literature Review",
-    "methodology": "Methodology",
-    "expected_results": "Expected Results",
+    "literature_review": "Chapter 2 — Literature Review",
+    "methodology": "Chapter 3 — Methodology",
+    "expected_results": "Chapter 4 — Expected Results",
 }
 
 AGENT_SEEDS = (
     ("scoot", "Scoot", "Research Scout", "Crawls scholarly indexes and the public web for relevant 2022–2026 sources."),
     ("evi-revy", "Evi-Revy", "Evidence Reviewer", "Labels source type, accessibility, relevance, and credibility for Beng."),
-    ("planx", "Planx", "Thesis Planner", "Uses only Beng-approved academic evidence and supporting web context."),
+    ("planx", "Planx", "Thesis Planner & Writer", "Plans Chapters 2–4 from the approved Chapter 1, then writes with Beng-selected evidence."),
     ("xengineer", "Xengineer", "Prototype Engineer", "Turns the approved methodology into build tasks."),
     ("teehee", "TeeHee", "Test & Evaluation Agent", "Tests the prototype and records its results."),
     ("cordy", "Cordy", "Project Coordinator", "Controls handoffs, approvals, and team updates."),
@@ -144,7 +144,7 @@ def initialize_database() -> None:
                 """
                 INSERT INTO thesis_sections (section_key, title, content, status, updated_at)
                 VALUES (?, ?, '', 'draft', ?)
-                ON CONFLICT(section_key) DO NOTHING
+                ON CONFLICT(section_key) DO UPDATE SET title = excluded.title
                 """,
                 (section_key, title, _now()),
             )
